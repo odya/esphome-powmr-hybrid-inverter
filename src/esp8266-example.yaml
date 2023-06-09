@@ -7,6 +7,7 @@ substitutions:
 
 esphome:
   name: "${device_name}"
+  friendly_name: "${node_name}"
   comment: "Monitor and control a PowMr inverter via RS232"
   platform: ESP8266
   board: d1_mini
@@ -67,7 +68,7 @@ modbus:
     send_wait_time: 500ms
 
 modbus_controller:
-  - id: smg0
+  - id: smg_inverter
     address: 0x05
     modbus_id: modbus0
     command_throttle: 600ms
@@ -95,8 +96,8 @@ sensor:
   ###################################
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} AC Voltage"
+    modbus_controller_id: smg_inverter
+    name: "AC Voltage"
     address: 4502
     register_type: holding
     value_type: U_WORD
@@ -110,8 +111,8 @@ sensor:
       - multiply: 0.1
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} AC Frequency"
+    modbus_controller_id: smg_inverter
+    name: "AC Frequency"
     address: 4503
     register_count: 3
     register_type: holding
@@ -126,8 +127,8 @@ sensor:
       - multiply: 0.1
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} PV Voltage (?)"
+  #   modbus_controller_id: smg_inverter
+  #   name: "PV Voltage (?)"
   #   address: 4504
   #   register_type: holding
   #   value_type: U_WORD
@@ -141,8 +142,8 @@ sensor:
   #     - multiply: 0.1
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Charging"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Charging"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4505
@@ -153,8 +154,8 @@ sensor:
   #     return swapBytes(x);
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Battery Voltage"
+    modbus_controller_id: smg_inverter
+    name: "Battery Voltage"
     address: 4506
     register_type: holding
     value_type: U_WORD
@@ -168,8 +169,8 @@ sensor:
       - multiply: 0.1
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Battery SoC"
+    modbus_controller_id: smg_inverter
+    name: "Battery SoC"
     accuracy_decimals: 0
     unit_of_measurement: "%"
     device_class: battery
@@ -181,8 +182,8 @@ sensor:
       return swapBytes(x);
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Battery Charge Current"
+    modbus_controller_id: smg_inverter
+    name: "Battery Charge Current"
     address: 4508
     register_type: holding
     value_type: U_WORD
@@ -194,8 +195,8 @@ sensor:
       return swapBytes(x);
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Battery Discharge Current"
+    modbus_controller_id: smg_inverter
+    name: "Battery Discharge Current"
     address: 4509
     register_count: 3
     register_type: holding
@@ -208,8 +209,8 @@ sensor:
       return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Load Voltage"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Load Voltage"
   #   address: 4510
   #   register_type: holding
   #   value_type: U_WORD
@@ -223,8 +224,8 @@ sensor:
   #     - multiply: 0.1
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Load Frequency"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Load Frequency"
   #   address: 4511
   #   register_type: holding
   #   value_type: U_WORD
@@ -238,8 +239,8 @@ sensor:
   #     - multiply: 0.1
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Load Power"
+    modbus_controller_id: smg_inverter
+    name: "Load Power"
     address: 4512
     register_count: 2
     register_type: holding
@@ -252,8 +253,8 @@ sensor:
       return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Load VA"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Load VA"
   #   address: 4513
   #   register_type: holding
   #   value_type: U_WORD
@@ -265,8 +266,8 @@ sensor:
   #     return swapBytes(x);
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Load Percent"
+    modbus_controller_id: smg_inverter
+    name: "Load Percent"
     address: 4514
     register_count: 21
     register_type: holding
@@ -286,8 +287,8 @@ sensor:
   # 4537 -> text
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Target Output Frequency"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Target Output Frequency"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4540
@@ -297,8 +298,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Max Total Charging Current"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Max Total Charging Current"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4541
@@ -308,8 +309,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Target Output Voltage"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Target Output Voltage"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4542
@@ -319,8 +320,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Max Utility Charging Current"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Max Utility Charging Current"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4543
@@ -330,8 +331,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Back To Utility Source Voltage"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Back To Utility Source Voltage"
   #   filters:
   #     - multiply: 0.1
   #   accuracy_decimals: 1
@@ -343,8 +344,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Back To Battery Source Voltage"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Back To Battery Source Voltage"
   #   filters:
   #     - multiply: 0.1
   #   accuracy_decimals: 1
@@ -360,8 +361,8 @@ sensor:
   # ####################################
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Bulk Charging Voltage"
+    modbus_controller_id: smg_inverter
+    name: "Bulk Charging Voltage"
     filters:
       - multiply: 0.1
     accuracy_decimals: 1
@@ -373,8 +374,8 @@ sensor:
       return swapBytes(x);
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Floating Charging Voltage"
+    modbus_controller_id: smg_inverter
+    name: "Floating Charging Voltage"
     filters:
       - multiply: 0.1
     accuracy_decimals: 1
@@ -386,8 +387,8 @@ sensor:
       return swapBytes(x);
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Low CutOff Voltage"
+    modbus_controller_id: smg_inverter
+    name: "Low CutOff Voltage"
     filters:
       - multiply: 0.1
     accuracy_decimals: 1
@@ -400,8 +401,8 @@ sensor:
       return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Battery Equalization Voltage"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Battery Equalization Voltage"
   #   filters:
   #     - multiply: 0.1
   #   accuracy_decimals: 1
@@ -413,8 +414,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Battery Equalized Time"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Battery Equalized Time"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4550
@@ -424,8 +425,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Battery Equalized Timeout"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Battery Equalized Timeout"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4551
@@ -435,8 +436,8 @@ sensor:
   #     return swapBytes(x);
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Equalization Interval"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Equalization Interval"
   #   accuracy_decimals: 0
   #   entity_category: diagnostic
   #   address: 4552
@@ -450,8 +451,8 @@ sensor:
   # 4554 -> binary
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Charger Status" # Off/Idle/Charging
+  #   modbus_controller_id: smg_inverter
+  #   name: "Charger Status" # Off/Idle/Charging
   #   address: 4555
   #   register_type: holding
   #   value_type: U_WORD
@@ -461,32 +462,32 @@ sensor:
 binary_sensor:
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Record Fault Code"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Record Fault Code"
   #   entity_category: diagnostic
   #   address: 4535
   #   register_type: holding
   #   bitmask: 0x1
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Battery Equalization"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Battery Equalization"
   #   entity_category: diagnostic
   #   address: 4535
   #   register_type: holding
   #   bitmask: 0x2
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Equalization Activated Immediately"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Equalization Activated Immediately"
   #   entity_category: diagnostic
   #   address: 4535
   #   register_type: holding
   #   bitmask: 0x4
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Alarm"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Alarm"
   #   entity_category: diagnostic
   #   address: 4535
   #   register_type: holding
@@ -495,72 +496,72 @@ binary_sensor:
   #   #   - invert:
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Backlight"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Backlight"
   #   entity_category: diagnostic
   #   address: 4535
   #   register_type: holding
   #   bitmask: 0x400
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Restart On Overload"
+    modbus_controller_id: smg_inverter
+    name: "Restart On Overload"
     entity_category: diagnostic
     address: 4535
     register_type: holding
     bitmask: 0x800
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Restart On Overheat"
+    modbus_controller_id: smg_inverter
+    name: "Restart On Overheat"
     entity_category: diagnostic
     address: 4535
     register_type: holding
     bitmask: 0x1000
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Beep On Primary Source Fail"
+    modbus_controller_id: smg_inverter
+    name: "Beep On Primary Source Fail"
     entity_category: diagnostic
     address: 4535
     register_type: holding
     bitmask: 0x2000
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Return To Default Screen"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Return To Default Screen"
   #   entity_category: diagnostic
   #   address: 4535
   #   register_type: holding
   #   bitmask: 0x4000
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Overload Bypass"
+    modbus_controller_id: smg_inverter
+    name: "Overload Bypass"
     entity_category: diagnostic
     address: 4535
     register_type: holding
     bitmask: 0x8000
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Load Enabled"
+    modbus_controller_id: smg_inverter
+    name: "Load Enabled"
     entity_category: diagnostic
     address: 4553
     register_type: holding
     bitmask: 0x4000
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} AC Active"
+    modbus_controller_id: smg_inverter
+    name: "AC Active"
     entity_category: diagnostic
     address: 4554
     register_type: holding
     bitmask: 0x8000
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} On Battery"
+    modbus_controller_id: smg_inverter
+    name: "On Battery"
     entity_category: diagnostic
     address: 4554
     register_type: holding
@@ -569,9 +570,9 @@ binary_sensor:
 text_sensor:
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
+    modbus_controller_id: smg_inverter
     id: charger_source_priority_text
-    name: "${node_name} Charger Source Priority"
+    name: "Charger Source Priority"
     entity_category: diagnostic
     address: 4536
     register_type: holding
@@ -589,8 +590,8 @@ text_sensor:
       }
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Output Source Priority"
+    modbus_controller_id: smg_inverter
+    name: "Output Source Priority"
     entity_category: diagnostic
     address: 4537
     register_count: 3
@@ -608,8 +609,8 @@ text_sensor:
       }
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} AC Input Voltage Range"
+  #   modbus_controller_id: smg_inverter
+  #   name: "AC Input Voltage Range"
   #   entity_category: diagnostic
   #   address: 4538
   #   register_type: holding
@@ -624,8 +625,8 @@ text_sensor:
   #     }
 
   # - platform: modbus_controller
-  #   modbus_controller_id: smg0
-  #   name: "${node_name} Target Output Frequency"
+  #   modbus_controller_id: smg_inverter
+  #   name: "Target Output Frequency"
   #   entity_category: diagnostic
   #   address: 4540
   #   register_type: holding
@@ -640,8 +641,8 @@ text_sensor:
   #     }
 
   - platform: modbus_controller
-    modbus_controller_id: smg0
-    name: "${node_name} Charger Status"
+    modbus_controller_id: smg_inverter
+    name: "Charger Status"
     address: 4555
     register_type: holding
     response_size: 2
@@ -658,7 +659,7 @@ text_sensor:
 select:
 
   - platform: modbus_controller
-    name: "${node_name} Buzzer Alarm"
+    name: "Buzzer Alarm"
     optimistic: true
     address: 5002
     value_type: U_WORD
@@ -667,7 +668,7 @@ select:
       "On": 1
 
   - platform: modbus_controller
-    name: "${node_name} Beep On Primary Source Fail"
+    name: "Beep On Primary Source Fail"
     optimistic: true
     address: 5007
     value_type: U_WORD
@@ -676,7 +677,7 @@ select:
       "On": 1
 
   - platform: modbus_controller
-    name: "${node_name} Overload Bypass"
+    name: "Overload Bypass"
     optimistic: true
     address: 5009
     value_type: U_WORD
@@ -686,7 +687,7 @@ select:
 
   - platform: modbus_controller
     id: charger_source_priority_select
-    name: "${node_name} Charger Source Priority"
+    name: "Charger Source Priority"
     optimistic: true
     address: 5017
     value_type: U_WORD
@@ -698,7 +699,7 @@ select:
 
   - platform: modbus_controller
     id: output_source_priority_select
-    name: "${node_name} Output Source Priority"
+    name: "Output Source Priority"
     optimistic: true
     address: 5018
     value_type: U_WORD
@@ -708,7 +709,7 @@ select:
       "SBU priority": 2
 
   # - platform: modbus_controller
-  #   name: "${node_name} Max Total Charge Current"
+  #   name: "Max Total Charge Current"
   #   optimistic: true
   #   address: 5022
   #   value_type: U_WORD
@@ -723,7 +724,7 @@ select:
   #     "80": 80
 
   - platform: modbus_controller
-    name: "${node_name} Utility Charge Current"
+    name: "Utility Charge Current"
     optimistic: true
     address: 5024
     value_type: U_WORD
