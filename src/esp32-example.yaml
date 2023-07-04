@@ -46,7 +46,6 @@ logger:
   level: WARN
   baud_rate: 0
   hardware_uart: UART1
-  esp8266_store_log_strings_in_flash: false
 
 # mqtt:
 #   broker: !secret mqtt_host
