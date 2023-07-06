@@ -1,5 +1,5 @@
 # ESPHome PowMr Hybrid Inverter
-ESPHome config for 2.4kW PowMr Hybrid Inverter. Must be compatible with 1.5kW, 2.4kW and 3.2kW models.
+ESPHome config for 2.4kW PowMr Hybrid Inverter. Must be compatible with 1.5kW, 2.4kW, 3.2kW and 10.2kW models.
 
 ## Requirements
 - One half of an ethernet cable with RJ45 connector
@@ -44,6 +44,7 @@ Looks like minimum heap size, that ensures stability, is near 6Kb.
   - [POW-HVM2.4H-24V](docs/POW-HVM2.4H-24V.pdf)
   - [POW-HVM2.0H-12V](docs/POW-HVM3.2H-24V.pdf)
   - [POW-HVM3.2H-24V](docs/POW-HVM3.2H-24V.pdf)
+  - [POW-HVM10.2M](docs/POW-HVM10.2M.pdf)
 
 ## References & thanks
 - https://github.com/leodesigner/powmr_comm 
