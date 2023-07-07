@@ -1,5 +1,24 @@
 # ESPHome PowMr Hybrid Inverter
-ESPHome config for 2.4kW PowMr Hybrid Inverter. Must be compatible with 1.5kW, 2.4kW, 3.2kW and 10.2kW models.
+ESPHome config for various PowMr Hybrid Inverter models.
+
+## Compatibility
+All models that are supported by the [**WIFI-VM**](https://powmr.com/products/powmr-wifi-module-with-rs232-remote-monitoring-solution-wifi-vm) device should work:
+
+- [**POW-HVM1.5H-12V**](https://powmr.com/products/all-in-one-inverter-charger-1500watt-220vac-12vdc)
+- **POW-HVM2.0H-12V**
+- [**POW-HVM2.4H-24V**](https://web.archive.org/web/20230329235125/https://powmr.com/inverters/all-in-one-inverter-chargers/powmr-2400watt-dc-24v-ac-220v-solar-inverter-charger)
+- [**POW-HVM3.2H-24V**](https://powmr.com/products/all-in-one-inverter-charger-3000w-220vac-24vdc)
+- [**POW-HVM3.6M-24V**](https://powmr.com/products/hybrid-inverter-charger-3600w-220vac-24vdc)
+- [**POW-HVM4.2M-24V**](https://powmr.com/products/hybrid-inverter-charger-4200w-220vac-24vdc)
+- [**POW-HVM5.5K-48V**](https://powmr.com/products/all-in-one-inverter-charger-5500w-220vac-48vdc)
+- [**POW-HVM6.2M-48V**](https://powmr.com/products/hybrid-inverter-charger-6200w-220vac-48vdc)
+- [**POW-HVM8.2M**](https://powmr.com/products/hybrid-inverter-charger-8000w-220vac-48vdc)
+- [**POW-HVM10.2M**](https://powmr.com/products/hybrid-inverter-charger-10200w-200vac-48vdc)
+
+### Tested models
+
+- **POW-HVM2.4H-24V**
+- **POW-HVM10.2M**
 
 ## Requirements
 - One half of an ethernet cable with RJ45 connector
