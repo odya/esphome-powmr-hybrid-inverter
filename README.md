@@ -1,8 +1,6 @@
 # ESPHome PowMr Hybrid Inverter
 ESPHome config for various PowMr Hybrid Inverter models.
 
-<img src="images/header.png" alt="Project logo" width="500" height="auto">
-
 ## Compatibility
 All models that are supported by the [**WIFI-VM**](https://powmr.com/products/powmr-wifi-module-with-rs232-remote-monitoring-solution-wifi-vm) device should work:
 
