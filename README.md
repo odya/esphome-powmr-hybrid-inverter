@@ -35,6 +35,11 @@ Looks like minimum heap size, that ensures stability, is near 6Kb. Although I st
 5) Edit substitutions & customize `powmr-inverter.yaml`. You can add contents of [common_system](/examples/common_system.yaml) & [common_sensors](/examples/common_sensors.yaml) to this file or include them separately following the example.
 6) Flash firmware to your ESP32
 
+## PCB`s
+There are 2 versions of PCB design available. Advanced version is more compact but needs SMD soldering skills, basic version uses 2.54 parts & modular approach. 
+- Docs for [Basic PCB](pcb/basic/README.md)
+- Docs for [Advanced PCB](pcb/advanced/README.md)
+
 ## PZEM module
 In version 1.2, a [PZEM](https://esphome.io/components/sensor/pzem004t) module was added for measuring parameters of the input AC grid. If you do not wish to use it, comment out the include of the corresponding module in the [main.yaml](/src/main.yaml) file.
 
