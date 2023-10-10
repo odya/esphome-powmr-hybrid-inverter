@@ -57,6 +57,7 @@
     * `0x100` AC Active
     * `0x8000` AC Active
 - 4555 : Charger Status *(0 - Off, 1 - Idle, 2 - Active)*
+- 4557 : Temperature sensor (**HVM3.6M confirmed**, **HVM2.4H not confirmed**)
 
 ### Write registers
 *( [+] means tested )*
