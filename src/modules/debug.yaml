@@ -1,0 +1,7 @@
+debug:
+  update_interval: 10s
+
+sensor:
+  - platform: debug
+    free:
+      name: "Heap Free"

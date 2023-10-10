@@ -1,0 +1,21 @@
+esphome:
+  name: "${device_name}"
+  friendly_name: "${node_name}"
+  comment: "Monitor and control a PowMr inverter"
+  includes:
+    - "${device_name}/helpers"
+  project:
+    name: "odya.esphome-powmr-hybrid-inverter"
+    version: 1.2.0
+
+packages:
+  inverter: !include {
+    file: modules/inverter.yaml
+  }
+  pzem: !include {
+    file: modules/pzem.yaml
+  }
+#  debug: !include modules/debug.yaml
+
+logger:
+  baud_rate: 0

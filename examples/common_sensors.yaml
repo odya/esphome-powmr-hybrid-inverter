@@ -1,0 +1,11 @@
+sensor:
+  - platform: uptime
+    name: "Uptime"
+    entity_category: "diagnostic"
+    device_class: duration
+    update_interval: 60s
+  - platform: wifi_signal
+    name: "RSSI"
+    id: wifi_rssi
+    entity_category: "diagnostic"
+    update_interval: 60s

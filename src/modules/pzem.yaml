@@ -1,0 +1,25 @@
+uart:
+  - id: uart_pzem
+    baud_rate: 9600
+    tx_pin: ${pzem_tx_pin}
+    rx_pin: ${pzem_rx_pin}
+#    debug:
+#      direction: BOTH
+#      dummy_receiver: false
+
+sensor:
+  - platform: pzem004t
+    uart_id: uart_pzem
+    current:
+      id: pzem_grid_current
+      name: "Grid Current"
+    voltage:
+      id: pzem_grid_voltage
+      name: "Grid Voltage"
+    power:
+      id: pzem_grid_power
+      name: "Grid Power"
+    energy:
+      id: pzem_grid_energy
+      name: "Grid Energy"
+    update_interval: 10s
