@@ -38,7 +38,7 @@ Looks like minimum heap size, that ensures stability, is near 6Kb. Although I st
 ## PCB`s
 There are 2 versions of PCB design available. Advanced version is more compact but needs SMD soldering skills, basic version uses 2.54 parts & modular approach. 
 - Docs for [Basic PCB](pcb/basic/README.md)
-- Docs for [Advanced PCB](pcb/advanced/README.md)
+- Docs for [Advanced PCB](pcb/advanced/README.md) by [@davidebeatrici](https://github.com/davidebeatrici)
 
 ## PZEM module
 In version 1.2, a [PZEM](https://esphome.io/components/sensor/pzem004t) module was added for measuring parameters of the input AC grid. If you do not wish to use it, comment out the include of the corresponding module in the [main.yaml](/src/main.yaml) file.
