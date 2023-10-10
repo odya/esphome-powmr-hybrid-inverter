@@ -59,13 +59,32 @@
 - 4555 : Charger Status *(0 - Off, 1 - Idle, 2 - Active)*
 
 ### Write registers
-- 5002 : Buzzer Alarm (range 0-1, settings menu 18)
-- 5007 : Beep On Primary Source Fail (range 0-1, settings menu 22)
-- 5009 : Overload Bypass (0-1, settings menu 23)
-- 5017 : Charger Source Priority (range 0-3, settings menu 16)
-- 5018 : Output Source Priority (range 0-2, settings menu 1)
-- 5024 : Utility Charge Current (one of 2, 10, 20, 30, 40, 50, 60, settings menu 11)
+*( [+] means tested )*
 
-- 5022 : Max Total Charge Current (range 10-80, settings menu 2)
-- 5025 : Comeback Utility Mode Voltage (SBU) (0.5 volts step, settings menu 12) 
-- 5026 : Comeback Battery Mode Voltage (SBU) (0.5 volts step, settings menu 13)
+| Register | Description                                                                         | HVM2.4H |
+|----------|-------------------------------------------------------------------------------------|---------|
+| 5002     | Buzzer Alarm (range 0-1, settings menu 18)                                          | +       |
+| 5004     | Backlight control (range 0-1, settings menu 20)                                     |         |
+| 5005     | Auto restart when overload occurs (range 0-1, settings menu 6)                      |         |
+| 5006     | Auto restart when over temperature occurs (range 0-1, settings menu 7)              |         |
+| 5007     | Beep On Primary Source Fail (range 0-1, settings menu 22)                           | +       |
+| 5008     | Auto return to default display screen (range 0-1, settings menu 19)                 |         |
+| 5009     | Overload Bypass (0-1, settings menu 23)                                             | +       |
+| 5010     | Record fault code (range 0-1, settings menu 25)                                     |         |
+| 5017     | Charger Source Priority (range 0-3, settings menu 16)                               | +       |
+| 5018     | Output Source Priority (range 0-2, settings menu 1)                                 | +       |
+| 5019     | AC input voltage range (range 0-1, settings menu 3) (0 - 90-280VAC, 1 - 170-280VAC) |         |
+| 5020     | Battery type (range 0-2, settings menu 5)                                           |         |
+| 5021     | Output frequency (range 0-1, settings menu 9) (0 - 50hz, 1 - 60hz)                  |         |
+| 5022     | Max Total Charge Current (range 10-80, settings menu 2)                             | +       |
+| 5023     | Output voltage (one of 220, 230, 240, settings menu 10)                             |         |
+| 5024     | Utility Charge Current (one of 2, 10, 20, 30, 40, 50, 60, settings menu 11)         | +       |
+| 5025     | Comeback Utility Mode Voltage (SBU) (0.5 volts step, settings menu 12)              |         |
+| 5026     | Comeback Battery Mode Voltage (SBU) (0.5 volts step, settings menu 13)              |         |
+| 5027     | Bulk charging voltage (settings menu 26)                                            |         |
+| 5028     | Floating charging voltage (settings menu 27)                                        |         |
+| 5029     | Low DC cut-off voltage (settings menu 29)                                           |         |
+| 5030     | Battery equalization voltage (settings menu 31)                                     |         |
+| 5031     | Battery equalized time (settings menu 33)                                           |         |
+| 5032     | Battery equalized timeout (settings menu 34)                                        |         |
+| 5033     | Equalization interval (settings menu 35)                                            |         |
