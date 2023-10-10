@@ -19,31 +19,33 @@ All models that are supported by the [**WIFI-VM**](https://powmr.com/products/po
 - **POW-HVM2.4H-24V**
 - **POW-HVM10.2M**
 
-## Requirements
-- One half of an ethernet cable with RJ45 connector
-- RS232-to-TTL module (MAX3232CSE f.e.)
-- Generic ESP32 (recommended) or ESP8266 board
-
 ## Connection
 ![PowMr ESP32 connection diagram](images/powmr_esp32_connection.png "PowMr ESP32 connection diagram")
 
 ## ESP8266
 This configuration can be used on the ESP8266, but you won't be able to use all the sensors due to the memory limitations of the ESP8266. 
-You can use minimal set of sensors/selects, leaving only the ones you need. You can use "Heap size" sensor of Debug component to determine how much free memory left. 
-Looks like minimum heap size, that ensures stability, is near 6Kb.
+You can use minimal set of sensors/selects, leaving only the ones you need. You can use "Heap size" sensor of Debug module to determine how much free memory left. 
+Looks like minimum heap size, that ensures stability, is near 6Kb. Although I still strongly recommend using ESP32.
 
 ## Usage
-- Copy `config` & `powmr-inverter` from src directory
-- Customize config details (secrets, device name, etc.)
+1) Create new project subdirectory within your ESPHome configuration directory (let it be `powmr-inverter`, for example) 
+2) Copy the contents of the `src` repo folder to a newly created project directory.
+3) Now, the `main.yaml` file must be located under `<esphome_config>/powmr-inverter`
+4) Create file `powmr-inverter.yaml` in the esphome config directory root and copy contents of [example config](/examples/powmr-inverter.yaml)
+5) Edit substitutions & customize `powmr-inverter.yaml`. You can add contents of [common_system](/examples/common_system.yaml) & [common_sensors](/examples/common_sensors.yaml) to this file or include them separately following the example.
+6) Flash firmware to your ESP32
 
-## Debugging
-- Uncomment debug section to enable the debug output of the UART component 
+## PCB`s
+There are 2 versions of PCB design available. Advanced version is more compact but needs SMD soldering skills, basic version uses 2.54 parts & modular approach. 
+- Docs for [Basic PCB](pcb/basic/README.md)
+- Docs for [Advanced PCB](pcb/advanced/README.md)
+
+## PZEM module
+In version 1.2, a [PZEM](https://esphome.io/components/sensor/pzem004t) module was added for measuring parameters of the input AC grid. If you do not wish to use it, comment out the include of the corresponding module in the [main.yaml](/src/main.yaml) file.
+
+## UART debugging
+- Uncomment debug section in [modules/inverter.yaml](/src/modules/inverter.yaml) or [modules/pzem.yaml](/src/modules/pzem.yaml) to enable the debug output of the UART component 
   ```
-  uart:
-    id: uart_0
-    baud_rate: 2400
-    tx_pin: ${tx_pin}
-    rx_pin: ${rx_pin}
     # debug:
     #   direction: BOTH
     #   dummy_receiver: false

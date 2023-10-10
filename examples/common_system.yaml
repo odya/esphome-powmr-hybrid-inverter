@@ -1,0 +1,25 @@
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${node_name} Fallback"
+    password: !secret ap_password
+
+# captive_portal:
+
+ota:
+  id: "${node_id}_ota"
+  password: !secret ota_password
+
+api:
+  reboot_timeout: 10min
+  encryption:
+    key: !secret api_encryption_key
+
+# mqtt:
+#   broker: !secret mqtt_host
+#   username: !secret mqtt_user
+#   password: !secret mqtt_pass
+#   topic_prefix: "esphome/${node_id}"
+#   discovery: false
+#   id: "${node_id}"
