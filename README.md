@@ -43,6 +43,18 @@ There are 2 versions of PCB design available. Advanced version is more compact b
 ## PZEM module
 In version 1.2, a [PZEM](https://esphome.io/components/sensor/pzem004t) module was added for measuring parameters of the input AC grid. If you do not wish to use it, comment out the include of the corresponding module in the [main.yaml](/src/main.yaml) file.
 
+## Inverter card
+For easy integration into Home Assistant, you can use the [following snippet](/examples/inverter-card-example.yaml). It compiles all the essential inverter sensors and controls in a compact manner. 
+The following custom plugins are required: [sunsynk-power-flow-card](https://github.com/slipx06/sunsynk-power-flow-card), [stack-in-card](https://github.com/custom-cards/stack-in-card), [tabbed-card](https://github.com/kinghat/tabbed-card), [canary](https://github.com/jcwillox/lovelace-canary).
+
+<table border="0">
+<tr>
+<td valign="top"><img alt="Inverter card page 1 screenshot" src="examples/inverter-card-screenshots/inverter-card-page1.png" width="250" height="auto"></td>
+<td valign="top"><img alt="Inverter card page 2 screenshot" src="examples/inverter-card-screenshots/inverter-card-page2.png" width="250" height="auto"></td>
+<td valign="top"><img alt="Inverter card page 3 screenshot" src="examples/inverter-card-screenshots/inverter-card-page3.png" width="250" height="auto"></td>
+</tr>
+</table>
+
 ## UART debugging
 - Uncomment debug section in [modules/inverter.yaml](/src/modules/inverter.yaml) or [modules/pzem.yaml](/src/modules/pzem.yaml) to enable the debug output of the UART component 
   ```
