@@ -69,7 +69,7 @@ cards:
         tabs:
           - attributes:
               label: General
-              icon: mdi:chart-bell-curve-cumulative
+              icon: mdi:book
             card:
               type: grid
               square: false
@@ -89,7 +89,7 @@ cards:
               columns: 3
           - attributes:
               label: Sensors
-              icon: mdi:chart-bell-curve-cumulative
+              icon: mdi:eye
             card:
               type: grid
               square: false
@@ -113,7 +113,7 @@ cards:
               columns: 2
           - attributes:
               label: Controls
-              icon: mdi:chart-bell-curve-cumulative
+              icon: mdi:cog
             card:
               type: grid
               square: false
