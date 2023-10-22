@@ -14,7 +14,7 @@ modbus:
 sensor:
   - platform: pzemac
     modbus_id: modbus_pzem
-    update_interval: 2s
+    update_interval: ${pzem_update_interval}
     voltage:
       name: "Grid PZEM Voltage"
       id: pzem_grid_voltage
@@ -50,6 +50,6 @@ sensor:
     device_class: power
     state_class: measurement
     accuracy_decimals: 0
-    update_interval: 10s
+    update_interval: ${update_interval}
     lambda: |-
       return id(pzem_grid_current).state * id(pzem_grid_voltage).state * id(pzem_grid_power_factor).state;
