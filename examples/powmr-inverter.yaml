@@ -4,6 +4,7 @@ substitutions:
   node_id: powmr_inverter
   inverter_tx_pin: GPIO16
   inverter_rx_pin: GPIO17
+  inverter_voltage_offset: "0"
   pzem_tx_pin: GPIO1
   pzem_rx_pin: GPIO3
   pzem_voltage_offset: "1"

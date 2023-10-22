@@ -28,7 +28,7 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
-    name: "Grid Voltage 2"
+    name: "Grid Voltage"
     address: 4502
     register_type: holding
     value_type: U_WORD
@@ -37,9 +37,13 @@ sensor:
     state_class: measurement
     accuracy_decimals: 1
     lambda: |-
+      if (!id(grid_active).state) {
+        return 0.0;
+      }
       return swapBytes(x);
     filters:
       - multiply: 0.1
+      - offset: ${inverter_voltage_offset}
       - heartbeat: 10s
     on_raw_value:
       then:
@@ -98,13 +102,14 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Battery Voltage"
+    id: battery_voltage
     address: 4506
     register_type: holding
     value_type: U_WORD
     unit_of_measurement: "V"
     device_class: voltage
     state_class: measurement
-    accuracy_decimals: 1
+    accuracy_decimals: 2
     lambda: |-
       return swapBytes(x);
     filters:
@@ -126,6 +131,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Battery Charge Current"
+    id: battery_charge_current
     address: 4508
     register_type: holding
     value_type: U_WORD
@@ -139,6 +145,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Battery Discharge Current"
+    id: battery_discharge_current
     address: 4509
     register_type: holding
     value_type: U_WORD
@@ -149,9 +156,33 @@ sensor:
     lambda: |-
       return swapBytes(x);
 
+  - platform: template
+    name: "Battery Current"
+    id: battery_current
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: 10s
+    lambda: |-
+      return id(battery_charge_current).state - id(battery_discharge_current).state;
+    filters:
+      - heartbeat: 10s
+
+  - platform: template
+    name: "Battery Power"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      return id(battery_current).state * id(battery_voltage).state;
+
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Load Voltage"
+    id: load_voltage
     address: 4510
     register_type: holding
     value_type: U_WORD
@@ -181,7 +212,9 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
-    name: "Load Power"
+    name: "Load Power Internal"
+    id: load_power_internal
+    internal: true
     address: 4512
     register_type: holding
     value_type: U_WORD
@@ -192,9 +225,48 @@ sensor:
     lambda: |-
       return swapBytes(x);
 
+  - platform: template
+    name: "Load Power"
+    id: load_power
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      return id(load_current).state * id(load_voltage).state;
+
+  - platform: template
+    name: "Load Current"
+    id: load_current
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+    update_interval: 10s
+    lambda: |-
+      if (id(load_voltage).state == 0) {
+        return 0;
+      }
+      return id(load_va).state / id(load_voltage).state;
+
+  - platform: template
+    name: "Load Power Factor"
+    id: load_power_factor
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 2
+    update_interval: 10s
+    lambda: |-
+      if (id(load_va).state == 0) {
+        return 0;
+      }
+      return id(load_power).state / id(load_va).state;
+
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Load VA"
+    id: load_va
     address: 4513
     register_type: holding
     value_type: U_WORD
@@ -500,6 +572,7 @@ binary_sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Grid Active"
+    id: grid_active
     address: 4554
     register_type: holding
     bitmask: 0x8000
@@ -589,6 +662,7 @@ select:
   - platform: modbus_controller
     name: "Buzzer Alarm"
     optimistic: true
+    skip_updates: 6
     entity_category: config
     address: 5002
     value_type: U_WORD
@@ -599,6 +673,7 @@ select:
   - platform: modbus_controller
     name: "Beep On Primary Source Fail"
     optimistic: true
+    skip_updates: 6
     entity_category: config
     address: 5007
     value_type: U_WORD
@@ -609,6 +684,7 @@ select:
   - platform: modbus_controller
     name: "Overload Bypass"
     optimistic: true
+    skip_updates: 6
     entity_category: config
     address: 5009
     value_type: U_WORD
@@ -620,6 +696,8 @@ select:
     id: charger_source_priority_select
     name: "Charger Source Priority"
     optimistic: true
+    skip_updates: 6
+    force_new_range: true
     entity_category: config
     address: 5017
     value_type: U_WORD
@@ -633,6 +711,8 @@ select:
     id: output_source_priority_select
     name: "Output Source Priority"
     optimistic: true
+    skip_updates: 6
+    force_new_range: true
     entity_category: config
     address: 5018
     value_type: U_WORD
@@ -644,6 +724,7 @@ select:
   - platform: modbus_controller
     name: "Max Total Charge Current"
     optimistic: true
+    skip_updates: 6
     entity_category: config
     address: 5022
     value_type: U_WORD
@@ -660,11 +741,11 @@ select:
   - platform: modbus_controller
     name: "Utility Charge Current"
     optimistic: true
+    skip_updates: 6
     entity_category: config
     address: 5024
     value_type: U_WORD
     optionsmap:
-      "2": 2
       "10": 10
       "20": 20
       "30": 30
