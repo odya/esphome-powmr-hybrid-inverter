@@ -7,19 +7,49 @@ uart:
 #      direction: BOTH
 #      dummy_receiver: false
 
-sensor:
-  - platform: pzem004t
+modbus:
+  - id: modbus_pzem
     uart_id: uart_pzem
-    current:
-      id: pzem_grid_current
-      name: "Grid Current"
+
+sensor:
+  - platform: pzemac
+    modbus_id: modbus_pzem
+    update_interval: 2s
     voltage:
+      name: "Grid PZEM Voltage"
       id: pzem_grid_voltage
-      name: "Grid Voltage"
+      internal: true
+      filters:
+        - &mafilter quantile:
+            window_size: 5
+            send_every: 1
+            send_first_at: 1
+            quantile: .9
+        - offset: ${pzem_voltage_offset}
+    current:
+      name: "Grid Current"
+      id: pzem_grid_current
+      filters:
+        - *mafilter
+        - offset: ${pzem_current_offset}
     power:
-      id: pzem_grid_power
       name: "Grid Power"
-    energy:
-      id: pzem_grid_energy
-      name: "Grid Energy"
+      id: pzem_grid_power
+      internal: true
+      filters:
+        - *mafilter
+    power_factor:
+      name: "Grid Power Factor"
+      id: pzem_grid_power_factor
+      filters:
+        - *mafilter
+
+  - platform: template
+    name: "Grid Power"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
     update_interval: 10s
+    lambda: |-
+      return id(pzem_grid_current).state * id(pzem_grid_voltage).state * id(pzem_grid_power_factor).state;

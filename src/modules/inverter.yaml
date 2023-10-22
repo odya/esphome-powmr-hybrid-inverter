@@ -40,6 +40,17 @@ sensor:
       return swapBytes(x);
     filters:
       - multiply: 0.1
+      - heartbeat: 10s
+    on_raw_value:
+      then:
+        - lambda: !lambda |-
+            if (!id(grid_active).state) {
+              id(pzem_grid_voltage).publish_state(0.0);
+              id(pzem_grid_current).publish_state(${pzem_current_offset} * -1);
+              id(pzem_grid_power).publish_state(0.0);
+              id(pzem_grid_power_factor).publish_state(0.0);
+            }
+            
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -492,12 +503,6 @@ binary_sensor:
     address: 4554
     register_type: holding
     bitmask: 0x8000
-    on_release:
-      then:
-        - lambda: !lambda |-
-            id(pzem_grid_current).publish_state(0.0);
-            id(pzem_grid_voltage).publish_state(0.0);
-            id(pzem_grid_power).publish_state(0.0);
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
