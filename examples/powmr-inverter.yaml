@@ -4,13 +4,18 @@ substitutions:
   node_id: powmr_inverter
   inverter_tx_pin: GPIO16
   inverter_rx_pin: GPIO17
+  inverter_voltage_offset: "0"
   pzem_tx_pin: GPIO1
   pzem_rx_pin: GPIO3
+  pzem_voltage_offset: "1"
+  pzem_current_offset: "0.04"
+  update_interval: 30s
+  pzem_update_interval: 6s # Needs to be 1/5 of update interval because of smoothing filter on pzem readings
 
 esp32:
   board: nodemcu-32s
   framework:
-    type: arduino
+    type: esp-idf
 
 packages:
   main: !include powmr-inverter/main.yaml

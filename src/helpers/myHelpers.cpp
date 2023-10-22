@@ -16,16 +16,11 @@ uint16_t swapBytes(std::string value)
   return (intValue << 8) | (intValue >> 8);
 }
 
-std::string intToBinStr(uint16_t x)
-{
-  return std::bitset< 16 >( x ).to_string();
-}
-
 void updateUnknownSelect(uint16_t sensorIndex, esphome::modbus_controller::ModbusSelect* selectComp)
 {
   const char* logTag = "myHelpers";
   if (!selectComp->active_index().has_value() || sensorIndex != selectComp->active_index().value()) {
-    esphome::ESP_LOGW(logTag, "Update select to index %d", sensorIndex);
+    //esphome::ESP_LOGW(logTag, "Update select to index %d", sensorIndex);
     auto call = selectComp->make_call();
     call.set_index(sensorIndex);
     call.perform();
