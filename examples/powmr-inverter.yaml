@@ -10,7 +10,7 @@ substitutions:
 esp32:
   board: nodemcu-32s
   framework:
-    type: arduino
+    type: esp-idf
 
 packages:
   main: !include powmr-inverter/main.yaml
