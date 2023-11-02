@@ -10,7 +10,7 @@ uart:
 modbus:
   - id: modbus_inverter
     uart_id: uart_inverter
-    send_wait_time: 200ms
+    send_wait_time: 250ms
 
 modbus_controller:
   - id: smg_inverter
@@ -18,6 +18,7 @@ modbus_controller:
     modbus_id: modbus_inverter
     setup_priority: -10
     offline_skip_updates: 100
+    command_throttle: 1s
     update_interval: ${update_interval}
 
 sensor:
@@ -290,13 +291,13 @@ sensor:
     lambda: |-
       return swapBytes(x);
 
-  # 4516 -> binary
-
   # 4535 -> binary
 
   # 4536 -> text
 
   # 4537 -> text
+
+  # 4538 -> text
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -511,8 +512,6 @@ binary_sensor:
     address: 4535
     register_type: holding
     bitmask: 0x100
-    # filters:
-    #   - invert:
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -611,7 +610,6 @@ text_sensor:
     name: "Output Source Priority"
     entity_category: diagnostic
     address: 4537
-    register_count: 3
     register_type: holding
     response_size: 2
     raw_encode: HEXBYTES
@@ -662,7 +660,7 @@ select:
   - platform: modbus_controller
     name: "Buzzer Alarm"
     optimistic: true
-    skip_updates: 6
+    skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5002
     value_type: U_WORD
@@ -673,7 +671,7 @@ select:
   - platform: modbus_controller
     name: "Beep On Primary Source Fail"
     optimistic: true
-    skip_updates: 6
+    skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5007
     value_type: U_WORD
@@ -684,7 +682,7 @@ select:
   - platform: modbus_controller
     name: "Overload Bypass"
     optimistic: true
-    skip_updates: 6
+    skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5009
     value_type: U_WORD
@@ -696,7 +694,7 @@ select:
     id: charger_source_priority_select
     name: "Charger Source Priority"
     optimistic: true
-    skip_updates: 6
+    skip_updates: ${select_skip_updates}
     force_new_range: true
     entity_category: config
     address: 5017
@@ -711,8 +709,7 @@ select:
     id: output_source_priority_select
     name: "Output Source Priority"
     optimistic: true
-    skip_updates: 6
-    force_new_range: true
+    skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5018
     value_type: U_WORD
@@ -724,7 +721,7 @@ select:
   - platform: modbus_controller
     name: "Max Total Charge Current"
     optimistic: true
-    skip_updates: 6
+    skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5022
     value_type: U_WORD
@@ -741,7 +738,7 @@ select:
   - platform: modbus_controller
     name: "Utility Charge Current"
     optimistic: true
-    skip_updates: 6
+    skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5024
     value_type: U_WORD

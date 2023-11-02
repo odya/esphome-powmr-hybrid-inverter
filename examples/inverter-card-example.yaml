@@ -1,145 +1,165 @@
 type: custom:stack-in-card
 cards:
-  - type: custom:sunsynk-power-flow-card
-    cardstyle: lite
-    show_solar: false
-    panel_mode: false
-    decimal_places: 3
-    no_card: true
-    card_mod:
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.powerwall_inverter_grid_active
+        state: unavailable
+    card:
+      type: markdown
+      content: |
+        <ha-alert alert-type="warning">Inverter is turned off</ha-alert>
       style: |
         ha-card {
-          margin-top: -5px !important;
+          margin: 0px 0;
+          border: 0;
         }
-        .card {
-          box-shadow: none !important;
-        }
-    inverter:
-      colour: orange
-      autarky: 'no'
-      auto_scale: true
-    battery:
-      energy: 2400
-      max_power: 2400
-      shutdown_soc: 0
-      colour: '#9A64A0'
-      show_daily: true
-      invert_power: true
-      show_absolute: true
-    solar:
-      show_daily: false
-      mppts: 0
-    load:
-      show_daily: true
-      max_power: 2500
-      auto_scale: true
-    grid:
-      max_power: 2500
-      show_daily_buy: true
-      show_daily_sell: false
-      show_nonessential: false
-    entities:
-      inverter_status_59: sensor.powerwall_inverter_charger_status
-      inverter_voltage_154: sensor.powerwall_inverter_load_voltage
-      inverter_current_164: sensor.powerwall_inverter_load_current
-      inverter_power_175: sensor.powerwall_inverter_load_power
-      load_frequency_192: sensor.powerwall_inverter_load_frequency
-      grid_connected_status_194: binary_sensor.powerwall_inverter_grid_active
-      grid_ct_power_172: sensor.powerwall_inverter_grid_power
-      grid_power_167: sensor.powerwall_inverter_grid_power
-      battery_voltage_183: sensor.powerwall_battery_total_voltage
-      battery_soc_184: sensor.powerwall_battery_state_of_charge
-      battery_power_190: sensor.powerwall_battery_composite_power
-      battery_current_191: sensor.powerwall_battery_composite_current
-      battery_temp_182: sensor.powerwall_battery_temperature_2
-      day_battery_charge_70: sensor.powerwall_battery_composite_charge_daily_energy
-      day_battery_discharge_71: sensor.powerwall_battery_composite_discharge_daily_energy
-      day_grid_import_76: sensor.powerwall_inverter_grid_daily_energy
-      day_load_energy_84: sensor.powerwall_inverter_load_daily_energy
-  - type: custom:stack-in-card
-    mode: vertical
-    no_card: true
-    card_mod:
-      style: |
-        ha-card {
-          margin-top: -10px !important;
-        }
-    cards:
-      - type: custom:tabbed-card
-        tabs:
-          - attributes:
-              label: General
-              icon: mdi:book
-            card:
-              type: grid
-              square: false
-              cards:
-                - type: tile
-                  entity: binary_sensor.powerwall_inverter_on_battery
-                  name: On Battery
-                  no_card: true
-                - type: tile
-                  entity: binary_sensor.powerwall_inverter_load_enabled
-                  name: Load Enabled
-                  no_card: true
-                - type: tile
-                  entity: sensor.powerwall_inverter_load_percent
-                  name: Load
-                  no_card: true
-              columns: 3
-          - attributes:
-              label: Sensors
-              icon: mdi:eye
-            card:
-              type: grid
-              square: false
-              cards:
-                - type: tile
-                  entity: sensor.powerwall_inverter_charger_status
-                  name: Charger
-                  no_card: true
-                - type: tile
-                  entity: sensor.powerwall_inverter_controller_temperature
-                  name: ESP Temp
-                  no_card: true
-                - type: tile
-                  entity: sensor.powerwall_inverter_rssi
-                  name: RSSI
-                  no_card: true
-                - type: tile
-                  entity: sensor.powerwall_inverter_uptime
-                  name: Uptime
-                  no_card: true
-              columns: 2
-          - attributes:
-              label: Controls
-              icon: mdi:cog
-            card:
-              type: grid
-              square: false
-              columns: 2
-              cards:
-                - type: tile
-                  entity: select.powerwall_inverter_output_source_priority
-                  name: Output Source Priority
-                  no_card: true
-                - type: tile
-                  entity: select.powerwall_inverter_charger_source_priority
-                  name: Charger Source Priority
-                  no_card: true
-                - type: tile
-                  entity: select.powerwall_inverter_utility_charge_current
-                  name: Utility Charge Current
-                  no_card: true
-                - type: tile
-                  entity: select.powerwall_inverter_overload_bypass
-                  name: Overload Bypass
-                  no_card: true
-                - type: tile
-                  entity: select.powerwall_inverter_beep_on_primary_source_fail
-                  name: Beep On Source Fail
-                  no_card: true
-                - type: tile
-                  entity: select.powerwall_inverter_buzzer_alarm
-                  name: Buzzer Alarm
-                  no_card: true
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.powerwall_inverter_grid_active
+        state_not: unavailable
+    card:
+      type: vertical-stack
+      cards:
+        - type: custom:sunsynk-power-flow-card
+          cardstyle: lite
+          show_solar: false
+          panel_mode: false
+          decimal_places: 3
+          no_card: true
+          card_mod:
+            style: |
+              ha-card {
+                margin-top: -5px !important;
+              }
+              .card {
+                box-shadow: none !important;
+              }
+          inverter:
+            colour: orange
+            autarky: 'no'
+            auto_scale: true
+          battery:
+            energy: 2400
+            max_power: 2400
+            shutdown_soc: 0
+            colour: '#9A64A0'
+            show_daily: true
+            invert_power: true
+            show_absolute: true
+          solar:
+            show_daily: false
+            mppts: 0
+          load:
+            show_daily: true
+            max_power: 2500
+            auto_scale: true
+          grid:
+            max_power: 2500
+            show_daily_buy: true
+            show_daily_sell: false
+            show_nonessential: false
+          entities:
+            inverter_status_59: sensor.powerwall_inverter_charger_status
+            inverter_voltage_154: sensor.powerwall_inverter_load_voltage
+            inverter_current_164: sensor.powerwall_inverter_load_current
+            inverter_power_175: sensor.powerwall_inverter_load_power
+            load_frequency_192: sensor.powerwall_inverter_load_frequency
+            grid_connected_status_194: binary_sensor.powerwall_inverter_grid_active
+            grid_ct_power_172: sensor.powerwall_inverter_grid_power
+            grid_power_167: sensor.powerwall_inverter_grid_power
+            battery_voltage_183: sensor.powerwall_battery_total_voltage
+            battery_soc_184: sensor.powerwall_battery_state_of_charge
+            battery_power_190: sensor.powerwall_battery_composite_power
+            battery_current_191: sensor.powerwall_battery_composite_current
+            battery_temp_182: sensor.powerwall_battery_temperature_2
+            day_battery_charge_70: sensor.powerwall_battery_composite_charge_daily_energy
+            day_battery_discharge_71: sensor.powerwall_battery_composite_discharge_daily_energy
+            day_grid_import_76: sensor.powerwall_inverter_grid_daily_energy
+            day_load_energy_84: sensor.powerwall_inverter_load_daily_energy
+        - type: custom:stack-in-card
+          mode: vertical
+          no_card: true
+          card_mod:
+            style: |
+              ha-card {
+                margin-top: -10px !important;
+              }
+          cards:
+            - type: custom:tabbed-card
+              tabs:
+                - attributes:
+                    label: General
+                    icon: mdi:book
+                  card:
+                    type: grid
+                    square: false
+                    cards:
+                      - type: tile
+                        entity: binary_sensor.powerwall_inverter_on_battery
+                        name: On Battery
+                        no_card: true
+                      - type: tile
+                        entity: binary_sensor.powerwall_inverter_load_enabled
+                        name: Load Enabled
+                        no_card: true
+                      - type: tile
+                        entity: sensor.powerwall_inverter_load_percent
+                        name: Load
+                        no_card: true
+                    columns: 3
+                - attributes:
+                    label: Sensors
+                    icon: mdi:eye
+                  card:
+                    type: grid
+                    square: false
+                    cards:
+                      - type: tile
+                        entity: sensor.powerwall_inverter_charger_status
+                        name: Charger
+                        no_card: true
+                      - type: tile
+                        entity: sensor.powerwall_inverter_controller_temperature
+                        name: ESP Temp
+                        no_card: true
+                      - type: tile
+                        entity: sensor.powerwall_inverter_rssi
+                        name: RSSI
+                        no_card: true
+                      - type: tile
+                        entity: sensor.powerwall_inverter_uptime
+                        name: Uptime
+                        no_card: true
+                    columns: 2
+                - attributes:
+                    label: Controls
+                    icon: mdi:cog
+                  card:
+                    type: grid
+                    square: false
+                    columns: 2
+                    cards:
+                      - type: tile
+                        entity: select.powerwall_inverter_output_source_priority
+                        name: Output Source Priority
+                        no_card: true
+                      - type: tile
+                        entity: select.powerwall_inverter_charger_source_priority
+                        name: Charger Source Priority
+                        no_card: true
+                      - type: tile
+                        entity: select.powerwall_inverter_utility_charge_current
+                        name: Utility Charge Current
+                        no_card: true
+                      - type: tile
+                        entity: select.powerwall_inverter_overload_bypass
+                        name: Overload Bypass
+                        no_card: true
+                      - type: tile
+                        entity: select.powerwall_inverter_beep_on_primary_source_fail
+                        name: Beep On Source Fail
+                        no_card: true
+                      - type: tile
+                        entity: select.powerwall_inverter_buzzer_alarm
+                        name: Buzzer Alarm
+                        no_card: true
