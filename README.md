@@ -74,16 +74,18 @@ logger:
 After this, the ranges map will be printed in the logs:
 ```text
 [15:55:14][C][modbus_controller:307]: ranges
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x1196 count=54 skip_updates=0
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x1399 count=1 skip_updates=4
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x138A count=1 skip_updates=4
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x138F count=1 skip_updates=4
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x1391 count=1 skip_updates=4
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x139A count=1 skip_updates=4
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x139E count=1 skip_updates=4
-[15:55:14][C][modbus_controller:310]:   Range type=3 start=0x13A0 count=1 skip_updates=4
+[18:41:21][C][modbus_controller:307]: ranges
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x1196 count=37 skip_updates=0
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x11BC count=16 skip_updates=0
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x138A count=1 skip_updates=2
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x138F count=1 skip_updates=2
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x1391 count=1 skip_updates=2
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x1399 count=1 skip_updates=2
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x139A count=1 skip_updates=2
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x139E count=1 skip_updates=2
+[18:41:21][C][modbus_controller:310]:   Range type=3 start=0x13A0 count=1 skip_updates=2
 ```
-> *In the example above, the sensor registers batch starts from `0x1196`. Select registers starts from `0x1399`.*
+> *In the example above, the sensor registers batches starts from `0x1196` & `0x11BC` (one large batch causes data errors). Select registers starts from `0x138A`.*
 > *Using batches for selects triggers `Modbus device set offline` warning messages, so you need to read them separately.*
 
 You will see gaps in register ranges map. To calculate `register_count`, you need to convert HEX addresses to decimal and subtract them.
