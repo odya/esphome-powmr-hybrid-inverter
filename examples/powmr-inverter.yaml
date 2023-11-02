@@ -9,7 +9,8 @@ substitutions:
   pzem_rx_pin: GPIO3
   pzem_voltage_offset: "1"
   pzem_current_offset: "0.04"
-  update_interval: 30s
+  update_interval: 30s # Minimum 10s recommended to avoid duplicate command errors
+  select_skip_updates: "2"
   pzem_update_interval: 6s # Needs to be 1/5 of update interval because of smoothing filter on pzem readings
 
 esp32:
