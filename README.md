@@ -106,6 +106,7 @@ You will see gaps in register ranges map. To calculate `register_count`, you nee
 ## Notes
 - Registers map: [registers-map.md](docs/registers-map.md)
 - Read registers are using little-endian format that doesn't have a native support in ESPHome, so we need a custom function to swap bytes.
+- Inverter UART pins (TX2 & RX2) are swapped https://github.com/odya/esphome-powmr-hybrid-inverter/issues/25
 - Manuals:
   - [POW-HVM1.5H-12V](docs/POW-HVM2.4H-24V.pdf)
   - [POW-HVM2.4H-24V](docs/POW-HVM2.4H-24V.pdf)
