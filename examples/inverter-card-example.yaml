@@ -35,9 +35,12 @@ cards:
                 box-shadow: none !important;
               }
           inverter:
-            colour: orange
-            autarky: 'no'
+            modern: false
+            colour: grey
+            autarky: power
             auto_scale: true
+            model: powmr
+            three_phase: false
           battery:
             energy: 2400
             max_power: 2400
