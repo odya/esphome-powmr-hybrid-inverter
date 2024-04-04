@@ -5,3 +5,4 @@ sensor:
   - platform: debug
     free:
       name: "Heap Free"
+    entity_category: diagnostic
