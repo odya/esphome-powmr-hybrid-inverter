@@ -75,6 +75,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "PV Voltage"
+    id: pv_voltage
     address: 4504
     register_type: holding
     value_type: U_WORD
@@ -90,6 +91,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "PV Power"
+    id: pv_power
     address: 4505
     register_type: holding
     value_type: U_WORD
@@ -99,6 +101,17 @@ sensor:
     accuracy_decimals: 1
     lambda: |-
      return swapBytes(x);
+
+  - platform: template
+    name: "PV Current"
+    id: pv_current
+    state_class: "measurement"
+    device_class: current
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    icon: mdi:solar-power
+    lambda: |-
+      return id(pv_power).state / id(pv_voltage).state;
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
