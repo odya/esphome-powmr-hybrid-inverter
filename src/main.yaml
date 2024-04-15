@@ -1,12 +1,14 @@
 esphome:
   name: "${device_name}"
   friendly_name: "${node_name}"
-  comment: "Monitor and control a PowMr inverter"
+  comment: "${device_description}" 
+  area: "${ha_area}" 
+  name_add_mac_suffix: false  
   includes:
     - "${device_name}/helpers"
   project:
-    name: "odya.esphome-powmr-hybrid-inverter"
-    version: 1.3.3
+    name: "${project_name}"
+    version: "${project_version}"
 
 packages:
   inverter: !include {
@@ -19,6 +21,11 @@ packages:
 
 logger:
   baud_rate: 0
+  level: WARN
+  logs:
+    component: ERROR # Fix for issue #4717 "Component xxxxxx took a long time for an operation"  
+
+captive_portal:
 
 sensor:
   - platform: internal_temperature
@@ -26,3 +33,78 @@ sensor:
     update_interval: 10s
     state_class: measurement
     device_class: temperature
+
+  - platform: template
+    name: "PV Current"
+    id: pv_current
+    state_class: "measurement"
+    device_class: current
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    icon: mdi:solar-power
+    lambda: |-
+      return id(pv_power).state / id(pv_voltage).state;
+
+#   Calculate the LIFETIME kWh CHARGED into the battery.
+  - platform: template
+    name: "Battery Total Charge"
+    id: battery_total_charge
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    icon: mdi:battery-plus-variant
+    lambda: |-
+      return id(battery_charge_current).state / id(battery_voltage).state;
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+
+#   Calculate the LIFETIME kWh DISCHARGED from the battery.
+  - platform: template
+    name: "Battery Total Discharge"
+    id: battery_total_discharge
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    icon: mdi:battery-minus-variant
+    lambda: |-
+      return id(battery_discharge_current).state / id(battery_voltage).state;
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+
+#   Use pv_power sensor to provide a Daily Total kWh produced by Solar Panels.
+  - platform: total_daily_energy
+    name: 'PV Yield Daily'
+    power_id: pv_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+
+#   Use load_power sensor to provide a Daily Total kWh consumed by the inverters Load.
+  - platform: total_daily_energy
+    name: 'Load Consumed Daily'
+    power_id: load_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+
+#   Use grid_power sensor to provide a Daily Total kWh consumed by the inverters Load.
+  - platform: total_daily_energy
+    name: 'Grid Imported Daily'
+    power_id: grid_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
