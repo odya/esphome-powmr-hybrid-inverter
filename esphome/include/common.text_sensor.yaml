@@ -1,0 +1,79 @@
+text_sensor:
+  #  Creates a sensor showing when the device was last restarted
+  - platform: template
+    name: 'Device Last Restart'
+    id: device_last_restart
+    icon: mdi:clock
+    entity_category: diagnostic
+    update_interval: 5min
+#    device_class: timestamp
+
+  #  Creates sensor for tracking the WiFi IP address
+  - platform: wifi_info
+    ip_address:
+      name: 'WiFi IP Address'
+      icon: mdi:wifi
+      entity_category: diagnostic
+
+  #  Defines the WiFi SSID network to connect to
+    ssid:
+      name: 'WiFi SSID'
+      icon: mdi:wifi-strength-2
+      entity_category: diagnostic
+
+  #  Creates sensor for tracking the WiFi IP MAC address
+    mac_address:
+      name: 'WiFi MAC Address'
+      entity_category: diagnostic
+
+  #  Creates a sensor of the name of installed project
+  - platform: template
+    name: 'Project Name'
+    id: project_name
+    icon: "mdi:label-outline"
+    entity_category: diagnostic
+    lambda: |-
+      return {"${project_name}"};
+    update_interval: 6h
+
+  #  Creates a sensor of the version of installed project
+  - platform: template
+    name: 'Project Version'
+    id: project_version
+    icon: "mdi:label-outline"
+    entity_category: diagnostic
+    lambda: |-
+      return {"${project_version}"};
+    update_interval: 6h
+
+  #  Creates a sensor of the version of installed ESPHome version
+  - platform: version
+    name: "Project ESPHome Version"
+    hide_timestamp: true
+
+
+  #  Creates a sensor of the uptime of the device, in formatted days, hours, minutes and seconds
+  - platform: template
+    name: "Device Uptime"
+    update_interval: 5min
+    entity_category: diagnostic
+    lambda: |-
+      int seconds = (id(uptime_seconds).state);
+      int days = seconds / (24 * 3600);
+      seconds = seconds % (24 * 3600);
+      int hours = seconds / 3600;
+      seconds = seconds % 3600;
+      int minutes = seconds /  60;
+      seconds = seconds % 60;
+      if ( days > 3650 ) {
+        return { "Starting up" };
+      } else if ( days ) {
+        return { (String(days) +"d " + String(hours) +"h " + String(minutes) +"m "+ String(seconds) +"s").c_str() };
+      } else if ( hours ) {
+        return { (String(hours) +"h " + String(minutes) +"m "+ String(seconds) +"s").c_str() };
+      } else if ( minutes ) {
+        return { (String(minutes) +"m "+ String(seconds) +"s").c_str() };
+      } else {
+        return { (String(seconds) +"s").c_str() };
+      }
+    icon: mdi:clock-start

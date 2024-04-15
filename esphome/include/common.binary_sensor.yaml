@@ -1,0 +1,5 @@
+binary_sensor:
+  #  Creates the status sensor
+  - platform: status
+    name: 'Device Status'
+    entity_category: diagnostic

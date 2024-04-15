@@ -1,0 +1,16 @@
+button:
+  #  Restart the ESP Device
+  - platform: restart
+    name: 'Restart ESP'
+
+  #  Reset the ESP Device
+  - platform: factory_reset
+    name: Restart ESP - Reset Settings
+    id: Reset
+    entity_category: config
+
+  #  Restart in Safe Mode
+  - platform: safe_mode
+    name: "Restart ESP - Safe Mode"
+    internal: false
+    entity_category: config

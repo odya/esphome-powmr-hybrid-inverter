@@ -1,0 +1,17 @@
+  #  Enable time component to reset energy at midnight
+time:
+  - platform: homeassistant
+    id: hass_time
+    timezone: "${timezone}"
+    update_interval: "${sntp_update_interval}"
+  # Publish the time the device was last restarted
+    on_time_sync:
+      then:
+        # Update last restart time, but only once.
+        - if:
+            condition:
+              lambda: 'return id(device_last_restart).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_last_restart
+                  state: !lambda 'return id(hass_time).now().strftime("%a %d %b %Y - %I:%M:%S %p");'

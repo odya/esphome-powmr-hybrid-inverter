@@ -1,0 +1,13 @@
+sensor:
+
+  #  Sensor uptime in seconds
+  - platform: uptime
+    name: "Uptime Seconds"
+    id: uptime_seconds
+    update_interval: 120s
+    entity_category: diagnostic
+    internal: True
+
+  # ESP32 Internal temperature
+  - platform: internal_temperature
+    name: "Device Temperature"
