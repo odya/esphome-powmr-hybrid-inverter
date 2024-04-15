@@ -2,6 +2,19 @@ substitutions:
   device_name: "powmr-inverter"
   node_name: "PowMr Inverter"
   node_id: powmr_inverter
+  device_description: "Monitor and control a PowMr inverter"
+  # Allows ESP device to be automatically lined to an 'Area' in Home Assistant. Typically used for areas such as 'Lounge Room', 'Kitchen' etc
+  ha_area: "Caravan"  
+  project_name: "odya.esphome-powmr-hybrid-inverter"
+  project_version: "1.3.3"
+  # Define a domain for this device to use. i.e. iot.home.lan (so device will appear as athom-smart-plug-v2.iot.home.lan in DNS/DHCP logs)
+  dns_domain: ""
+  # Set timezone of the smart plug. Useful if the plug is in a location different to the HA server. Can be entered in unix Country/Area format (i.e. "Australia/Sydney")
+  timezone: "Australia/Sydney"
+  time_update_interval: 6h
+  # Enables faster network connections, with last connected SSID being connected to and no full scan for SSID being undertaken
+  wifi_fast_connect: "true"   
+  #
   inverter_tx_pin: GPIO16
   inverter_rx_pin: GPIO17
   inverter_voltage_offset: "0"
@@ -16,7 +29,7 @@ substitutions:
 esp32:
   board: nodemcu-32s
   framework:
-    type: esp-idf
+    type: esp-idf    # Note: type arduino also works and is much easier and faster to compile
 
 packages:
   main: !include powmr-inverter/main.yaml
@@ -32,6 +45,19 @@ logger:
 time:
   - platform: homeassistant
     id: hass_time
+    timezone: "${timezone}"
+    update_interval: "${time_update_interval}"
+  # Publish the time the device was last restarted
+    on_time_sync:
+      then:
+        # Update last restart time, but only once.
+        - if:
+            condition:
+              lambda: 'return id(device_last_restart).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_last_restart
+                  state: !lambda 'return id(hass_time).now().strftime("%a %d %b %Y - %I:%M:%S %p");'
 
 #web_server:
 #  port: 80
