@@ -1,168 +1,130 @@
-type: custom:stack-in-card
-cards:
-  - type: conditional
-    conditions:
-      - entity: binary_sensor.powerwall_inverter_grid_active
-        state: unavailable
-    card:
-      type: markdown
-      content: |
-        <ha-alert alert-type="warning">Inverter is turned off</ha-alert>
-      style: |
-        ha-card {
-          margin: 0px 0;
-          border: 0;
-        }
-  - type: conditional
-    conditions:
-      - entity: binary_sensor.powerwall_inverter_grid_active
-        state_not: unavailable
-    card:
-      type: vertical-stack
-      cards:
-        - type: custom:sunsynk-power-flow-card
-          cardstyle: lite
-          show_solar: false
-          panel_mode: false
-          decimal_places: 3
-          no_card: true
-          card_mod:
-            style: |
-              ha-card {
-                margin-top: -5px !important;
-              }
-              .card {
-                box-shadow: none !important;
-              }
-          inverter:
-            modern: false
-            colour: grey
-            autarky: power
-            auto_scale: true
-            model: powmr
-            three_phase: false
-          battery:
-            energy: 2400
-            max_power: 2400
-            shutdown_soc: 0
-            colour: '#9A64A0'
-            show_daily: true
-            invert_power: true
-            show_absolute: true
-          solar:
-            show_daily: false
-            mppts: 0
-          load:
-            show_daily: true
-            max_power: 2500
-            auto_scale: true
-          grid:
-            max_power: 2500
-            show_daily_buy: true
-            show_daily_sell: false
-            show_nonessential: false
-          entities:
-            inverter_status_59: sensor.powerwall_inverter_charger_status
-            inverter_voltage_154: sensor.powerwall_inverter_load_voltage
-            inverter_current_164: sensor.powerwall_inverter_load_current
-            inverter_power_175: sensor.powerwall_inverter_load_power
-            load_frequency_192: sensor.powerwall_inverter_load_frequency
-            grid_connected_status_194: binary_sensor.powerwall_inverter_grid_active
-            grid_ct_power_172: sensor.powerwall_inverter_grid_power
-            grid_power_167: sensor.powerwall_inverter_grid_power
-            battery_voltage_183: sensor.powerwall_battery_total_voltage
-            battery_soc_184: sensor.powerwall_battery_state_of_charge
-            battery_power_190: sensor.powerwall_battery_composite_power
-            battery_current_191: sensor.powerwall_battery_composite_current
-            battery_temp_182: sensor.powerwall_battery_temperature_2
-            day_battery_charge_70: sensor.powerwall_battery_composite_charge_daily_energy
-            day_battery_discharge_71: sensor.powerwall_battery_composite_discharge_daily_energy
-            day_grid_import_76: sensor.powerwall_inverter_grid_daily_energy
-            day_load_energy_84: sensor.powerwall_inverter_load_daily_energy
-        - type: custom:stack-in-card
-          mode: vertical
-          no_card: true
-          card_mod:
-            style: |
-              ha-card {
-                margin-top: -10px !important;
-              }
-          cards:
-            - type: custom:tabbed-card
-              tabs:
-                - attributes:
-                    label: General
-                    icon: mdi:book
-                  card:
-                    type: grid
-                    square: false
-                    cards:
-                      - type: tile
-                        entity: binary_sensor.powerwall_inverter_on_battery
-                        name: On Battery
-                        no_card: true
-                      - type: tile
-                        entity: binary_sensor.powerwall_inverter_load_enabled
-                        name: Load Enabled
-                        no_card: true
-                      - type: tile
-                        entity: sensor.powerwall_inverter_load_percent
-                        name: Load
-                        no_card: true
-                    columns: 3
-                - attributes:
-                    label: Sensors
-                    icon: mdi:eye
-                  card:
-                    type: grid
-                    square: false
-                    cards:
-                      - type: tile
-                        entity: sensor.powerwall_inverter_charger_status
-                        name: Charger
-                        no_card: true
-                      - type: tile
-                        entity: sensor.powerwall_inverter_controller_temperature
-                        name: ESP Temp
-                        no_card: true
-                      - type: tile
-                        entity: sensor.powerwall_inverter_rssi
-                        name: RSSI
-                        no_card: true
-                      - type: tile
-                        entity: sensor.powerwall_inverter_uptime
-                        name: Uptime
-                        no_card: true
-                    columns: 2
-                - attributes:
-                    label: Controls
-                    icon: mdi:cog
-                  card:
-                    type: grid
-                    square: false
-                    columns: 2
-                    cards:
-                      - type: tile
-                        entity: select.powerwall_inverter_output_source_priority
-                        name: Output Source Priority
-                        no_card: true
-                      - type: tile
-                        entity: select.powerwall_inverter_charger_source_priority
-                        name: Charger Source Priority
-                        no_card: true
-                      - type: tile
-                        entity: select.powerwall_inverter_utility_charge_current
-                        name: Utility Charge Current
-                        no_card: true
-                      - type: tile
-                        entity: select.powerwall_inverter_overload_bypass
-                        name: Overload Bypass
-                        no_card: true
-                      - type: tile
-                        entity: select.powerwall_inverter_beep_on_primary_source_fail
-                        name: Beep On Source Fail
-                        no_card: true
-                      - type: tile
-                        entity: select.powerwall_inverter_buzzer_alarm
-                        name: Buzzer Alarm
-                        no_card: true
+type: custom:sunsynk-power-flow-card
+cardstyle: lite
+panel_mode: true
+large_font: false
+title: PowMr Inverter - Power Monitor
+title_size: 12px
+show_solar: true
+show_battery: true
+show_grid: true
+decimal_places: 2
+dynamic_line_width: true
+max_line_width: 8
+inverter:
+  modern: false
+  colour: grey
+  autarky: power
+  auto_scale: true
+  model: powmr
+  three_phase: false
+battery:
+  energy: 2400
+  max_power: 2400
+  shutdown_soc: 0
+  colour: '#9A64A0'
+  show_daily: true
+  invert_power: true
+  show_absolute: true
+  hide_soc: false
+  show_remaining_energy: true
+  dynamic_colour: true            
+  linear_gradient: true
+solar:
+  show_daily: false
+  mppts: 1
+  maxpower: your-panel-total-watts-here
+  pv1_name: Solar PV
+  auto_scale: true
+  display_mode: 2
+  dynamic_colour: true
+load:
+  show_daily: true
+  max_power: 2500
+  show_daily_aux: true
+  show_aux: false
+  invert_aux: false
+  show_absolute_aux: false
+  aux_name: Generator
+  aux_type: gen
+  aux_colour: '#5490c2'
+  aux_off_colour: brown
+  aux_loads: 0
+  aux_load1_icon: ''
+  aux_load2_icon: ''
+  animation_speed: 4
+  essential_name: Caravan
+  additional_loads: 3
+  load1_name: Kitchen
+  load2_name: Bedroom
+  load3_name: Lights
+  load1_icon: mdi:gas-burner
+  load2_icon: mdi:bed-outline
+  load3_icon: mdi:light-flood-down
+  load4_icon: ''
+  auto_scale: true
+  dynamic_icon: true
+  dynamic_colour: true
+  invert_load: false
+  aux_dynamic_colour: true
+grid:
+  grid_name: Utility Power
+  max_power: 2500
+  colour: '#FF2400'
+  export_colour: green
+  no_grid_colour: null
+  grid_off_colour: '#e7d59f'
+  show_daily_buy: true
+  show_daily_sell: false
+  show_nonessential: true
+  invert_grid: false
+  nonessential_name: Non Essential
+  nonessential_icon: none
+  additional_loads: 1
+  load1_name: AirCon
+  load2_name: EV
+  load1_icon: mdi:fan
+  load2_icon: mdi:car
+  animation_speed: 7
+  auto_scale: true
+  dynamic_icon: true
+  dynamic_colour: true
+  energy_cost_decimals: 3
+entities:
+  day_battery_charge_70: sensor.battery_charge_daily
+  day_battery_discharge_71: sensor.battery_discharge_daily
+  day_load_energy_84: sensor.powmr_inverter_load_consumed_daily
+  day_grid_import_76: sensor.powmr_inverter_grid_imported_daily
+  day_pv_energy_108: sensor.powmr_inverter_pv_yield_daily
+  day_aux_energy: sensor.aircon_energy_daily_kwh
+  inverter_voltage_154: sensor.powmr_inverter_load_voltage
+  load_frequency_192: sensor.powmr_inverter_load_frequency            
+  grid_power_169: sensor.powmr_inverter_load_consumed_daily
+  total_pv_generation: sensor.powmr_inverter_pv_yield_daily
+  inverter_current_164: sensor.powmr_inverter_load_current
+  inverter_power_175: sensor.powmr_inverter_load_power
+  inverter_status_59: sensor.powmr_inverter_charger_status
+  pv1_power_186: sensor.powmr_inverter_pv_power         
+  environment_temp: sensor.<YOUR-LOCATION>_temp
+  remaining_solar: sensor.energy_production_today_remaining            
+  pv1_voltage_109: sensor.powmr_inverter_pv_voltage
+  pv1_current_110: sensor.powmr_inverter_pv_current
+  battery_voltage_183: sensor.powmr_inverter_battery_voltage
+  battery_soc_184: sensor.powmr_inverter_battery_soc
+  battery_power_190: sensor.powmr_inverter_battery_power
+  battery_current_191: sensor.powmr_inverter_battery_current
+  essential_power: sensor.powmr_inverter_load_power
+  essential_load1: sensor.kitchen_active_power
+  essential_load2: sensor.bed_av__active_power
+  essential_load1_extra: sensor.kitchen_temperature
+  essential_load2_extra: sensor.bedroom_temperature
+  load_power_L1: sensor.powmr_inverter_load_power
+  nonessential_power: sensor.sunsynk_card_non_essential_active_power
+  non_essential_load1: null
+  non_essential_load2: null
+  non_essential_load3: null
+  grid_ct_power_172: sensor.powmr_inverter_grid_power
+  grid_connected_status_194: sensor.powmr_inverter_grid_active
+  aux_power_166: sensor.aircon_aux_active_power
+  aux_load1_extra: sensor.caravan_internal_temperature
+  aux_load2_extra: sensor.caravan_external_temperature
+  grid_voltage: sensor.powmr_inverter_grid_voltage 
