@@ -155,6 +155,7 @@ sensor:
     accuracy_decimals: 1
     lambda: |-
       return swapBytes(x);
+    internal: true
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -167,8 +168,10 @@ sensor:
     device_class: current
     state_class: measurement
     accuracy_decimals: 1
+    # Convert this value into a negative value, to allow 'battery_cirrent' to show a negative value & Battery Power to then show Charge/Discharge
     lambda: |-
-      return swapBytes(x);
+      return swapBytes(0 - x);
+    internal: true
 
   - platform: template
     name: "Battery Current"
@@ -179,13 +182,13 @@ sensor:
     accuracy_decimals: 1
     update_interval: ${update_interval}
     lambda: |-
-      return id(battery_charge_current).state - id(battery_discharge_current).state;
+      return id(battery_charge_current).state + id(battery_discharge_current).state;
     filters:
       - heartbeat: 10s
 
   - platform: template
-    name: "Battery Power"
-    id: battery_power
+    name: "Battery Charge / Discharge Power"
+    id: battery_charge_discharge_power
     unit_of_measurement: "W"
     device_class: power
     state_class: measurement
