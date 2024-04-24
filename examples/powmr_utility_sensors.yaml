@@ -16,25 +16,25 @@ utility_meter:
   battery_charge_daily:
     unique_id: battery_charge_daily
     name: Battery Charge Daily
-    source: sensor.powmr_inverter_battery_total_charge    
+    source: sensor.powmr_inverter_battery_daily_charge    
     cycle: daily
 
   battery_charge_weekly:
     unique_id: battery_charge_weekly
     name: Battery Charge Weekly
-    source: sensor.powmr_inverter_battery_total_charge
+    source: sensor.powmr_inverter_battery_daily_charge
     cycle: weekly
 
   battery_charge_monthly:
     unique_id: battery_charge_monthly
     name: Battery Charge Monthly
-    source: sensor.powmr_inverter_battery_total_charge    
+    source: sensor.powmr_inverter_battery_daily_charge    
     cycle: monthly      
 
   battery_charge_yearly:
     unique_id: battery_charge_yearly
     name: Battery Charge Yearly
-    source: sensor.powmr_inverter_battery_total_charge    
+    source: sensor.powmr_inverter_battery_daily_charge    
     cycle: yearly
 
 ####
@@ -42,24 +42,24 @@ utility_meter:
   battery_discharge_daily:
     unique_id: battery_discharge_daily
     name: Battery Discharge Daily
-    source: sensor.powmr_inverter_battery_total_discharge    
+    source: sensor.powmr_inverter_battery_daily_discharge    
     cycle: daily
 
   battery_discharge_weekly:
     unique_id: battery_discharge_weekly
     name: Battery Discharge Weekly
-    source: sensor.powmr_inverter_battery_total_discharge    
+    source: sensor.powmr_inverter_battery_daily_discharge    
     cycle: weekly
 
   battery_discharge_monthly:
     unique_id: battery_discharge_monthly
     name: Battery Discharge Monthly
-    source: sensor.powmr_inverter_battery_total_discharge
+    source: sensor.powmr_inverter_battery_daily_discharge
     cycle: monthly      
 
   battery_discharge_yearly:
     unique_id: battery_discharge_yearly
     name: Battery Discharge Yearly
-    source: sensor.powmr_inverter_battery_total_discharge
+    source: sensor.powmr_inverter_battery_daily_discharge
     cycle: yearly
 
