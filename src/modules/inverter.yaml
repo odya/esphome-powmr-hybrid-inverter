@@ -185,6 +185,7 @@ sensor:
 
   - platform: template
     name: "Battery Power"
+    id: battery_power
     unit_of_measurement: "W"
     device_class: power
     state_class: measurement
