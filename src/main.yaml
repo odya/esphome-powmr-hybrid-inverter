@@ -54,7 +54,7 @@ sensor:
     state_class: total_increasing
     icon: mdi:battery-plus-variant
     lambda: |-
-      return id(battery_charge_current).state / id(battery_voltage).state;
+      return id(battery_charge_current).state * id(battery_voltage).state;
     filters:
       # Multiplication factor from W to kW is 0.001
       - multiply: 0.001
@@ -68,7 +68,7 @@ sensor:
     state_class: total_increasing
     icon: mdi:battery-minus-variant
     lambda: |-
-      return id(battery_discharge_current).state / id(battery_voltage).state;
+      return id(battery_discharge_current).state * id(battery_voltage).state;
     filters:
       # Multiplication factor from W to kW is 0.001
       - multiply: 0.001
