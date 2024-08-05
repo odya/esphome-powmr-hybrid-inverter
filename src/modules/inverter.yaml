@@ -30,6 +30,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Grid Voltage"
+    id: grid_voltage
     address: 4502
     register_type: holding
     value_type: U_WORD
@@ -46,16 +47,6 @@ sensor:
       - multiply: 0.1
       - offset: ${inverter_voltage_offset}
       - heartbeat: 10s
-    on_raw_value:
-      then:
-        - lambda: !lambda |-
-            if (!id(grid_active).state) {
-              id(pzem_grid_voltage).publish_state(0.0);
-              id(pzem_grid_current).publish_state(${pzem_current_offset} * -1);
-              id(pzem_grid_power).publish_state(0.0);
-              id(pzem_grid_power_factor).publish_state(0.0);
-            }
-            
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -192,6 +183,28 @@ sensor:
     update_interval: ${update_interval}
     lambda: |-
       return id(battery_current).state * id(battery_voltage).state;
+
+  - platform: template
+    name: "Battery Charge Power"
+    id: battery_charge_power
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: ${update_interval}
+    lambda: |-
+      return id(battery_charge_current).state * id(battery_voltage).state;
+
+  - platform: template
+    name: "Battery Discharge Power"
+    id: battery_discharge_power
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: ${update_interval}
+    lambda: |-
+      return id(battery_discharge_current).state * id(battery_voltage).state;
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -486,6 +499,18 @@ sensor:
     lambda: |-
       return swapBytes(x);
 
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "PV Temperature"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4557
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "°C"
+    lambda: |-
+      return swapBytes(x);
+
   # 4553 -> binary
 
   # 4554 -> binary
@@ -583,6 +608,13 @@ binary_sensor:
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
+    name: "AC Active"
+    address: 4553
+    register_type: holding
+    bitmask: 0x2000
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
     name: "Grid Active"
     id: grid_active
     address: 4554
@@ -592,6 +624,7 @@ binary_sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "On Battery"
+    id: on_battery
     address: 4554
     register_type: holding
     bitmask: 0x1
@@ -611,10 +644,9 @@ text_sensor:
       uint16_t sensorIndex = swapBytes(modbus_controller::word_from_hex_str(x, 0));
       updateUnknownSelect(sensorIndex, id(charger_source_priority_select));
       switch (sensorIndex) {
-        case 0: return std::string("Utility first");
-        case 1: return std::string("Solar first");
-        case 2: return std::string("Solar and Utility");
-        case 3: return std::string("Only solar");
+        case 0: return std::string("Solar first");
+        case 1: return std::string("Solar and Utility");
+        case 2: return std::string("Only solar");
         default: return std::string(x);
       }
 
@@ -655,6 +687,7 @@ text_sensor:
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Charger Status"
+    id: charger_status
     address: 4555
     register_type: holding
     response_size: 2
@@ -682,12 +715,59 @@ select:
       "On": 1
 
   - platform: modbus_controller
+    name: "Backlight"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5004
+    value_type: U_WORD
+    force_new_range: true
+    optionsmap:
+      "Off": 0
+      "On": 1
+
+  - platform: modbus_controller
+    name: "Restart On Overload"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5005
+    value_type: U_WORD
+    optionsmap:
+      "Off": 0
+      "On": 1
+
+  - platform: modbus_controller
+    name: "Restart On Overheat"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5006
+    value_type: U_WORD
+    force_new_range: true
+    optionsmap:
+      "Off": 0
+      "On": 1
+
+  - platform: modbus_controller
     name: "Beep On Primary Source Fail"
     optimistic: true
     skip_updates: ${select_skip_updates}
     entity_category: config
     address: 5007
     value_type: U_WORD
+    optionsmap:
+      "Off": 0
+      "On": 1
+
+  - platform: modbus_controller
+    name: "Return To Default Display"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5008
+    value_type: U_WORD
+    force_new_range: true
     optionsmap:
       "Off": 0
       "On": 1
@@ -713,10 +793,9 @@ select:
     address: 5017
     value_type: U_WORD
     optionsmap:
-      "Utility first": 0
-      "Solar first": 1
-      "Solar and Utility": 2
-      "Only Solar": 3
+      "Solar first": 0
+      "Solar and Utility": 1
+      "Only Solar": 2
 
   - platform: modbus_controller
     id: output_source_priority_select
@@ -732,7 +811,32 @@ select:
       "SBU priority": 2
 
   - platform: modbus_controller
+    name: "AC input voltage range"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5019
+    force_new_range: true
+    value_type: U_WORD
+    optionsmap:
+      "APL (90-280)": 0
+      "UPS (170-280)": 1
+
+  - platform: modbus_controller
+    name: "Battery type"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5020
+    value_type: U_WORD
+    optionsmap:
+      "AGM": 0
+      "Flooded": 1
+      "User Defined": 2
+
+  - platform: modbus_controller
     name: "Max Total Charge Current"
+    id: max_total_charge_current
     optimistic: true
     skip_updates: ${select_skip_updates}
     entity_category: config
@@ -749,7 +853,21 @@ select:
       "80": 80
 
   - platform: modbus_controller
+    name: "Output voltage"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5023
+    force_new_range: true
+    value_type: U_WORD
+    optionsmap:
+      "220V": 220
+      "230V": 230
+      "240V": 240
+
+  - platform: modbus_controller
     name: "Utility Charge Current"
+    id: utility_charge_current
     optimistic: true
     skip_updates: ${select_skip_updates}
     entity_category: config
