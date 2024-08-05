@@ -1,11 +1,96 @@
 sensor:
+  - platform: internal_temperature
+    name: "Controller Temperature"
+    update_interval: ${update_interval}
+    state_class: measurement
+    device_class: temperature
   - platform: uptime
     name: "Uptime"
+    id: esp_uptime
     entity_category: "diagnostic"
     device_class: duration
-    update_interval: 60s
+    update_interval: ${update_interval}
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(esp_uptime).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();
   - platform: wifi_signal
     name: "RSSI"
     id: wifi_rssi
     entity_category: "diagnostic"
-    update_interval: 60s
+    update_interval: ${update_interval}
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_rssi
+    name: "WiFi Signal Percent"
+    filters:
+        - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+  - platform: total_daily_energy
+    name: "Daily Energy"
+    power_id: load_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+  - platform: total_daily_energy
+    name: "PV Daily Energy"
+    power_id: pv_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+  - platform: total_daily_energy
+    name: "Battery Daily Charge Energy"
+    power_id: battery_charge_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+  - platform: total_daily_energy
+    name: "Battery Daily Discharge Energy"
+    power_id: battery_discharge_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+
+text_sensor:
+  # Uptime Human Readable
+  - platform: template
+    name: "Uptime HR"
+    id: uptime_human
+    icon: mdi:clock-start
+
+binary_sensor:
+  - platform: status
+    name: "Controller Status"
+    entity_category: diagnostic
+
+button:
+  #  Restart the ESP Device
+  - platform: restart
+    name: 'Restart ESP'
