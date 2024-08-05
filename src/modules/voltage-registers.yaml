@@ -1,0 +1,47 @@
+number:
+  - platform: modbus_controller
+    name: "Back To Utility Source Voltage"
+    id: back_to_utility_source_voltage
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5025
+    value_type: U_WORD
+    force_new_range: true
+    min_value: 21.0 # 12V - 10.5, 48V - 45
+    max_value: 25.5 # 12V - 15.0, 48V - 51
+    step: 0.5 # 48V - 1
+    multiply: 10
+  - platform: modbus_controller
+    name: "Back To Battery Source Voltage"
+    id: back_to_battery_source_voltage
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5026
+    value_type: U_WORD
+    min_value: 24.0 # 12V - 12, 48V - 48
+    max_value: 29.0 # 12V - 17, 48V - 58
+    step: 0.5 # 48V - 1
+    multiply: 10
+  - platform: modbus_controller
+    name: "Bulk Charging Voltage"
+    id: bulk_charging_voltage
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5027
+    value_type: U_WORD
+    force_new_range: true
+    min_value: 25.0 # 12V - 12.5, 48V - 48
+    max_value: 31.5 # 12V - 15.5, 48V - 61
+    step: 0.1
+    multiply: 10
+  - platform: modbus_controller
+    name: "Floating Charging Voltage"
+    id: floating_charging_voltage
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5028
+    value_type: U_WORD
+    min_value: 25.0 # 12V - 12.5, 48V - 48
+    max_value: 31.5 # 12V - 15.5, 48V - 61
+    step: 0.1
+    multiply: 10
