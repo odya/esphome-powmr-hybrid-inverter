@@ -53,3 +53,15 @@ sensor:
     update_interval: ${update_interval}
     lambda: |-
       return id(pzem_grid_current).state * id(pzem_grid_voltage).state * id(pzem_grid_power_factor).state;
+
+# extend "Grid Voltage" for pzem
+  - id: !extend grid_voltage 
+    on_raw_value:
+      then:
+        - lambda: !lambda |-
+            if (!id(grid_active).state) {
+              id(pzem_grid_voltage).publish_state(0.0);
+              id(pzem_grid_current).publish_state(${pzem_current_offset} * -1);
+              id(pzem_grid_power).publish_state(0.0);
+              id(pzem_grid_power_factor).publish_state(0.0);
+            }
