@@ -21,20 +21,15 @@ esp32:
 packages:
   main: !include powmr-inverter/main.yaml
   # You can replace next 2 lines with your common configs for all devices
-  common_system: !include includes/common_system.yaml
-  common_sensors: !include includes/common_sensors.yaml
+  common_system: !include powmr-inverter/includes/common_system.yaml
+  common_sensors: !include powmr-inverter/includes/common_sensors.yaml
 
 logger:
   level: WARN
+  baud_rate: 0
   logs:
     component: ERROR # Fix for issue #4717 "Component xxxxxx took a long time for an operation"
 
 time:
   - platform: homeassistant
     id: hass_time
-
-#web_server:
-#  port: 80
-#  ota: false
-
-
