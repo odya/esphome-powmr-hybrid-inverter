@@ -9,6 +9,7 @@ wifi:
 
 ota:
   id: "${node_id}_ota"
+  platform: esphome
   password: !secret ota_password
 
 api:
@@ -23,3 +24,7 @@ api:
 #   topic_prefix: "esphome/${node_id}"
 #   discovery: false
 #   id: "${node_id}"
+
+#web_server:
+#  port: 80
+#  ota: false
