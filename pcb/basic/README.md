@@ -1,6 +1,6 @@
 # Basic PCB
 
-OSHWLab page: https://oshwlab.com/ganzevich/PowMr-Hybrid-Inverter
+OSHWLab page: [https://oshwlab.com/ganzevich/PowMr-Hybrid-Inverter](https://oshwlab.com/ganzevich/PowMr-Hybrid-Inverter)
 
 ## PSU module connection
 Using standard XL4005 module:
