@@ -13,6 +13,7 @@ modbus:
 
 sensor:
   - platform: pzemac
+    id: pzemac_1
     modbus_id: modbus_pzem
     update_interval: ${pzem_update_interval}
     voltage:
@@ -25,12 +26,18 @@ sensor:
             send_every: 1
             send_first_at: 1
             quantile: .9
+        - clamp:
+            min_value: 0
+            max_value: 300
         - offset: ${pzem_voltage_offset}
     current:
       name: "Grid Current"
       id: pzem_grid_current
       filters:
         - *mafilter
+        - clamp:
+            min_value: 0
+            max_value: 40
         - offset: ${pzem_current_offset}
     power:
       name: "Grid Power"
@@ -38,6 +45,9 @@ sensor:
       internal: true
       filters:
         - *mafilter
+        - clamp:
+            min_value: 0
+            max_value: 10000
     power_factor:
       name: "Grid Power Factor"
       id: pzem_grid_power_factor
@@ -53,3 +63,10 @@ sensor:
     update_interval: ${update_interval}
     lambda: |-
       return id(pzem_grid_current).state * id(pzem_grid_voltage).state * id(pzem_grid_power_factor).state;
+
+button:
+  - platform: template
+    name: "Pzem Reset"
+    on_press:
+      then:
+        - pzemac.reset_energy: pzemac_1
