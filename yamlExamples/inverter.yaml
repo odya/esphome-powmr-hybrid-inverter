@@ -1,0 +1,1796 @@
+uart:
+  - id: uart_inverter
+    baud_rate: 2400
+    tx_pin: ${inverter_tx_pin}
+    rx_pin: ${inverter_rx_pin}
+    debug:
+      direction: BOTH
+#      dummy_receiver: false
+
+modbus:
+  - id: modbus_inverter
+    uart_id: uart_inverter
+    send_wait_time: 250ms
+
+modbus_controller:
+  - id: smg_inverter
+    address: 0x05
+    modbus_id: modbus_inverter
+    setup_priority: -10
+    offline_skip_updates: 100
+    command_throttle: 1s
+    update_interval: ${update_interval}
+
+sensor:
+
+  ###################################
+  # Read first group (44 registers) #
+  ###################################
+
+  # 4501 -> text
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Grid Voltage"
+    address: 4502
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      if (!id(grid_active).state) {
+        return 0.0;
+      } else {
+        return swapBytes(x);
+      }
+    filters:
+      - multiply: 0.1
+      - offset: ${inverter_voltage_offset}
+      - heartbeat: 10s
+    on_raw_value:
+      then:
+        - lambda: !lambda |-
+            if (!id(grid_active).state) {
+              id(pzem_grid_voltage).publish_state(0.0);
+              id(pzem_grid_current).publish_state(${pzem_current_offset} * -1);
+              id(pzem_grid_power).publish_state(0.0);
+              id(pzem_grid_power_factor).publish_state(0.0);
+            }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Grid Frequency"
+    address: 4503
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "Hz"
+    device_class: frequency
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "PV Voltage"
+    id: pv_voltage
+    address: 4504
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "PV Power"
+    id: pv_power
+    address: 4505
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+     return swapBytes(x);
+
+  - platform: total_daily_energy
+    power_id: pv_power
+    name: "PV Daily Energy"
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - platform: integration
+    name: 'PV Total Energy'
+    sensor: pv_power
+    time_unit: h
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: "kWh"
+    restore: true
+    state_class: total_increasing
+    device_class: energy
+
+  - platform: template
+    name: "PV Current"
+    id: pv_current
+    state_class: "measurement"
+    device_class: current
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    icon: mdi:solar-power
+    lambda: |-
+      if (id(pv_voltage).state == 0) {
+        return 0;
+      } else {
+        return id(pv_power).state / id(pv_voltage).state;
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Voltage"
+    id: battery_voltage
+    address: 4506
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 2
+    lambda: |-
+      return swapBytes(x);
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery SoC"
+    accuracy_decimals: 0
+    unit_of_measurement: "%"
+    device_class: battery
+    address: 4507
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Charge Current"
+    id: battery_charge_current
+    address: 4508
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Discharge Current"
+    id: battery_discharge_current
+    address: 4509
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: template
+    name: "Battery Current"
+    id: battery_current
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 1
+    update_interval: ${update_interval}
+    lambda: |-
+      return id(battery_charge_current).state - id(battery_discharge_current).state;
+    filters:
+      - heartbeat: 10s
+
+  - platform: template
+    name: "Battery Power"
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: ${update_interval}
+    lambda: |-
+      return id(battery_current).state * id(battery_voltage).state;
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Load Voltage"
+    id: load_voltage
+    address: 4510
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Load Frequency"
+    address: 4511
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "Hz"
+    device_class: frequency
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Load Apparent Power"
+    id: load_apparent_power
+    address: 4512
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "VA"
+    device_class: apparent_power
+    state_class: measurement
+    accuracy_decimals: 0
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Load Active Power"
+    id: load_active_power
+    #internal: true
+    address: 4513
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: total_daily_energy
+    power_id: load_active_power
+    name: "Load Daily Active Energy"
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - platform: template
+    name: "Load Current"
+    id: load_current
+    unit_of_measurement: "A"
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+    update_interval: ${update_interval}
+    lambda: |-
+      if (id(load_voltage).state == 0) {
+        return 0;
+      } else {
+        return id(load_apparent_power).state / id(load_voltage).state;
+      }
+
+  - platform: template
+    name: "Load Power Factor"
+    id: load_power_factor
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 2
+    update_interval: ${update_interval}
+    lambda: |-
+      if (id(load_apparent_power).state == 0) {
+        return 0;
+      } else {
+        return id(load_active_power).state / id(load_apparent_power).state;
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Load Percent"
+    address: 4514
+    #register_count: 21
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+    device_class: power_factor
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4515 - Load Percent?"
+    id: R4515
+    address: 4515
+    #register_count: 20
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4516 - Flags?"
+    id: R4516
+    address: 4516
+    #register_count: 14
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4517 - Test"
+    id: R4517
+    address: 4517
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4518 - Test"
+    id: R4518
+    address: 4518
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4519 - Test"
+    id: R4519
+    address: 4519
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4520 - Test"
+    id: R4520
+    address: 4520
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4521 - Test"
+    id: R4521
+    address: 4521
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4522 - Test"
+    id: R4522
+    address: 4522
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4523 - Test"
+    id: R4523
+    address: 4523
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4524 - Test"
+    id: R4524
+    address: 4524
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4525 - Test"
+    id: R4525
+    address: 4525
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4526 - Test"
+    id: R4526
+    address: 4526
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4527 - Test"
+    id: R4527
+    address: 4527
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4528 - Test"
+    id: R4528
+    address: 4528
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4529 - Test"
+    id: R4529
+    address: 4529
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4531 - Test"
+    id: R4531
+    address: 4531
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4532 - Test"
+    id: R4532
+    address: 4532
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4533 - Test"
+    id: R4533
+    address: 4533
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4534 - Test"
+    id: R4534
+    address: 4534
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  # 4535 -> binary
+
+  # 4536 -> text
+
+  # 4537 -> text
+
+  # 4538 -> text
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4539 - Test"
+    id: R4539
+    address: 4539
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Target Output Frequency"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4540
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "Hz"
+    lambda: |-
+      uint16_t value = swapBytes(x);
+      switch (value) {
+        case 0: return std::uint16_t(50);
+        case 1: return std::uint16_t(60);
+        default: return x;
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: max_total_charging_current
+    #name: "Max Total Charging Current"
+    internal: true
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4541
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Target Output Voltage"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4542
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: max_utility_charging_current
+    #name: "Max Utility Charging Current"
+    internal: true
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4543
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Back To Utility Source Voltage"
+    filters:
+      - multiply: 0.1
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    address: 4544
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Back To Battery Source Voltage"
+    filters:
+      - multiply: 0.1
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    address: 4545
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  # ####################################
+  # # Read second group (16 registers) #
+  # ####################################
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Bulk Charging Voltage"
+    filters:
+      - multiply: 0.1
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    force_new_range: true
+    address: 4546
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Floating Charging Voltage"
+    filters:
+      - multiply: 0.1
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    address: 4547
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Low CutOff Voltage"
+    filters:
+      - multiply: 0.1
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    address: 4548
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Equalization Voltage"
+    filters:
+      - multiply: 0.1
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    address: 4549
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Equalized Time"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4550
+    register_type: holding
+    value_type: U_WORD
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Equalized Timeout"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4551
+    register_type: holding
+    value_type: U_WORD
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Equalization Interval"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4552
+    register_type: holding
+    value_type: U_WORD
+    lambda: |-
+      return swapBytes(x);
+
+  # 4553 -> binary
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Status Register 01"
+    id: status_register_01
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4553
+    register_type: holding
+    value_type: U_WORD
+    lambda: |-
+      return swapBytes(x);
+
+  # 4554 -> binary
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Status Register 02"
+    id: status_register_02
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    address: 4554
+    register_type: holding
+    value_type: U_WORD
+    lambda: |-
+      return swapBytes(x);
+
+  # 4555 -> text
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4556 - Test"
+    id: R4556
+    address: 4556
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Internal Temperature"
+    id: temperature_internal
+    unit_of_measurement: "Â°C"
+    device_class: temperature
+    address: 4557
+    register_type: holding
+    value_type: U_WORD
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4558 - Test"
+    id: R4558
+    address: 4558
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4559 - Test"
+    id: R4559
+    address: 4559
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4560 - Test"
+    id: R4560
+    address: 4560
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4561 - Test"
+    id: R4561
+    address: 4561
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Register 4562 - Test"
+    id: R4562
+    address: 4562
+    entity_category: diagnostic
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "?"
+    state_class: measurement
+    lambda: |-
+      return swapBytes(x);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "PV2 Voltage"
+    id: pv2_voltage
+    address: 4563
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      return swapBytes(x);
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "PV2 Power"
+    id: pv2_power
+    address: 4564
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+     return swapBytes(x);
+
+  - platform: total_daily_energy
+    power_id: pv2_power
+    name: "PV2 Daily Energy"
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+
+  - platform: integration
+    name: 'PV2 Total Energy'
+    sensor: pv2_power
+    time_unit: h
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: "kWh"
+    restore: true
+    state_class: total_increasing
+    device_class: energy
+
+  - platform: template
+    name: "PV2 Current"
+    id: pv2_current
+    state_class: "measurement"
+    device_class: current
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    icon: mdi:solar-power
+    lambda: |-
+      if (id(pv2_voltage).state == 0) {
+        return 0;
+      } else {
+        return id(pv2_power).state / id(pv2_voltage).state;
+      }
+
+binary_sensor:
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: record_fault_status
+    #name: "Record Fault Code"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x1
+    on_press:
+      then:
+        - switch.turn_on: record_fault
+        # - select.set_index:
+        #     id: record_fault
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: record_fault
+        # - select.set_index:
+        #     id: record_fault
+        #     index: 0
+
+#  - platform: modbus_controller
+#    modbus_controller_id: smg_inverter
+#    name: "Battery Equalization"
+#    entity_category: diagnostic
+#    address: 4535
+#    register_type: holding
+#    bitmask: 0x2
+
+#  - platform: modbus_controller
+#    modbus_controller_id: smg_inverter
+#    name: "Equalization Activated Immediately"
+#    entity_category: diagnostic
+#    address: 4535
+#    register_type: holding
+#    bitmask: 0x4
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: alarm_status
+    #name: "Alarm"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x100
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: backlight_status
+    #name: "Backlight"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x400
+    on_press:
+      then:
+        - switch.turn_on: backlight
+        # - select.set_index:
+        #     id: backlight
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: backlight
+        # - select.set_index:
+        #     id: backlight
+        #     index: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: overload_restart_status
+    #name: "Restart On Overload"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x800
+    on_press:
+      then:
+        - switch.turn_on: overload_restart
+        # - select.set_index:
+        #     id: overload_restart
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: overload_restart
+        # - select.set_index:
+        #     id: overload_restart
+        #     index: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: temperature_restart_status
+    #name: "Restart On Temperature"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x1000
+    on_press:
+      then:
+        - switch.turn_on: temperature_restart
+        # - select.set_index:
+        #     id: temperature_restart
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: temperature_restart
+        # - select.set_index:
+        #     id: temperature_restart
+        #     index: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: beep_source_status
+    #name: "Beep On Primary Source Fail"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x2000
+    on_press:
+      then:
+        - switch.turn_on: source_beep
+        # - select.set_index:
+        #     id: source_beep
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: source_beep
+        # - select.set_index:
+        #     id: source_beep
+        #     index: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: screen_return_status
+    #name: "Return To Default Screen"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x4000
+    on_press:
+      then:
+        - switch.turn_on: auto_return
+        # - select.set_index:
+        #     id: auto_return
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: auto_return
+        # - select.set_index:
+        #     id: auto_return
+        #     index: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: overload_bypass_status
+    #name: "Overload Bypass"
+    internal: true
+    entity_category: diagnostic
+    address: 4535
+    register_type: holding
+    bitmask: 0x8000
+    on_press:
+      then:
+        - switch.turn_on: overload_bypass
+        # - select.set_index:
+        #     id: overload_bypass
+        #     index: 1
+    on_release:
+      then:
+        - switch.turn_off: overload_bypass
+        # - select.set_index:
+        #     id: overload_bypass
+        #     index: 0
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Discharge"
+    id: battery_discharge
+    address: 4553
+    register_type: holding
+    bitmask: 0x100
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Battery Charge"
+    id: battery_charge
+    address: 4553
+    register_type: holding
+    bitmask: 0x200
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "On Battery"
+#     id: battery_active
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x200
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "PV Active"
+    id: pv_active
+    address: 4553
+    register_type: holding
+    bitmask: 0x10
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Grid Active"
+    id: grid_active
+    address: 4553
+    register_type: holding
+    bitmask: 0x2000
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Load Enabled"
+    address: 4553
+    register_type: holding
+    bitmask: 0x4000
+
+# # Diagnostics ...
+    
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 0"
+#     id: R4553_b0
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x1
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 1"
+#     id: R4553_b1
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x2
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 2"
+#     id: R4553_b2
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x4
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 3"
+#     id: R4553_b3
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x8
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 4"
+#     id: R4553_b4
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x10
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 5"
+#     id: R4553_b5
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x20
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 6"
+#     id: R4553_b6
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x40
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 7"
+#     id: R4553_b7
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x80
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 8"
+#     id: R4553_b8
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x100
+
+# # On Battery
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 9"
+#     id: R4553_b9
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x200
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 10"
+#     id: R4553_b10
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x400
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 11"
+#     id: R4553_b11
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x800
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 12"
+#     id: R4553_b12
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x1000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 13"
+#     id: R4553_b13
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x2000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 14"
+#     id: R4553_b14
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x4000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4553 / bit 15"
+#     id: R4553_b15
+#     address: 4553
+#     register_type: holding
+#     bitmask: 0x8000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 0"
+#     id: R4554_b0
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x1
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 1"
+#     id: R4554_b1
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x2
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 2"
+#     id: R4554_b2
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x4
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 3"
+#     id: R4554_b3
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x8
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 4"
+#     id: R4554_b4
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x10
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 5"
+#     id: R4554_b5
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x20
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 6"
+#     id: R4554_b6
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x40
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 7"
+#     id: R4554_b7
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x80
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 8"
+#     id: R4554_b8
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x100
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 9"
+#     id: R4554_b9
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x200
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 10"
+#     id: R4554_b10
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x400
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 11"
+#     id: R4554_b11
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x800
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 12"
+#     id: R4554_b12
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x1000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 13"
+#     id: R4554_b13
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x2000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 14"
+#     id: R4554_b14
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x4000
+
+#   - platform: modbus_controller
+#     modbus_controller_id: smg_inverter
+#     name: "R4554 / bit 15"
+#     id: R4554_b15
+#     address: 4554
+#     register_type: holding
+#     bitmask: 0x8000
+
+text_sensor:
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: mode
+    name: "Inverter Mode"
+    address: 4501
+    entity_category: diagnostic
+    register_type: holding
+    response_size: 2
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t sensorIndex = swapBytes(modbus_controller::word_from_hex_str(x, 0));
+      switch (sensorIndex) {
+        case 0: return std::string("Mode 0 (?)");
+        case 1: return std::string("Mode 1 (?)");
+        case 2: return std::string("Standby Mode (Charging Battery)");
+        case 3: return std::string("Battery Mode");
+        case 11: return std::string("Standby Mode, Charging");
+        case 4: return std::string("Line Mode (Bypass)");
+        default: return std::string(x);
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    name: "Warning & Error Code"
+    id: warning_error_code
+    address: 4530
+    #register_count: 5
+    entity_category: diagnostic
+    register_type: holding
+    response_size: 2
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t sensorIndex = swapBytes(modbus_controller::word_from_hex_str(x, 0));
+      std::string StrWrnErr = to_string(sensorIndex) + ": ";
+      if (sensorIndex == 0) {
+        StrWrnErr += "no warning / error";
+      }
+      else {
+        if (sensorIndex && 32) {
+            StrWrnErr += "PV energy is low";
+        }
+      }
+      return std::string(StrWrnErr);
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: charger_source_priority_status
+    #name: "Charger Source Priority"
+    internal: true
+    entity_category: diagnostic
+    address: 4536
+    register_type: holding
+    response_size: 2
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t sensorIndex = swapBytes(modbus_controller::word_from_hex_str(x, 0));
+      updateUnknownSelect(sensorIndex, id(charger_source_priority_select));
+      switch (sensorIndex) {
+        case 0: return std::string("Solar first (CSO)");
+        case 1: return std::string("Solar and Utility (SNU)");
+        case 2: return std::string("Solar Only (OSO)");
+        default: return std::string(x);
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: output_priority_status
+    #name: "Output Source Priority"
+    internal: true
+    entity_category: diagnostic
+    address: 4537
+    register_type: holding
+    response_size: 2
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t sensorIndex = swapBytes(modbus_controller::word_from_hex_str(x, 0));
+      updateUnknownSelect(sensorIndex, id(output_source_priority_select));
+      switch (sensorIndex) {
+        case 0: return std::string("Utility -> Solar / Battery (USB)");
+        case 1: return std::string("Solar -> Solar / Utility -> Battery (SUB)");
+        case 2: return std::string("Solar -> Solar / Battery (SBU)");
+        case 3: return std::string("Solar -> Solar / Utility, Battery as backup (MKS)");
+        default: return std::string(x);
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: ac_voltage_range_status
+    #name: "AC Input Voltage Range"
+    internal: true
+    entity_category: diagnostic
+    address: 4538
+    register_type: holding
+    response_size: 2
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = swapBytes(modbus_controller::word_from_hex_str(x, 0));
+      updateUnknownSelect(value, id(ac_input_voltage_range_select));
+      switch (value) {
+        case 0: return std::string("Appliances");
+        case 1: return std::string("UPS");
+        default: return std::string(x);
+      }
+
+  - platform: modbus_controller
+    modbus_controller_id: smg_inverter
+    id: inverter_status
+    name: "Inverter Status"
+    address: 4555
+    register_type: holding
+    response_size: 2
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t sensorIndex = swapBytes(modbus_controller::word_from_hex_str(x, 0));
+      switch (sensorIndex) {
+        case 10: return std::string("Discharging (A)");
+        case 11: return std::string("Charging (B)");
+        case 12: return std::string("Idle (C)");
+        case 13: return std::string("Fully charged (D)");
+        default: return std::string(x);
+      }
+
+switch:
+
+  - platform: modbus_controller
+    id: buzzer
+    name: "Buzzer Alarm"
+    #optimistic: true
+    #skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5002
+    #value_type: U_WORD
+    #optionsmap:
+    #  "Off": 0
+    #  "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: backlight
+    name: "Backlight control"
+    #optimistic: true
+    #skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5004
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: overload_restart
+    name: "Auto restart when overload occurs"
+    # optimistic: true
+    # skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5005
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: temperature_restart
+    name: "Auto restart when over temperature"
+    # optimistic: true
+    # skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5006
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: source_beep
+    name: "Beep On Primary Source Fail"
+    # optimistic: true
+    # skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5007
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: auto_return
+    name: "Auto return to default display screen"
+    # optimistic: true
+    # skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5008
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: overload_bypass
+    name: "Overload Bypass"
+    # optimistic: true
+    # skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5009
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+  - platform: modbus_controller
+    id: record_fault
+    name: "Record fault code"
+    # optimistic: true
+    # skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5010
+    # value_type: U_WORD
+    # optionsmap:
+    #   "Off": 0
+    #   "On": 1
+    modbus_controller_id: smg_inverter
+    register_type: holding
+    bitmask: 1
+    icon: "mdi:toggle-switch"
+
+select:
+
+  - platform: modbus_controller
+    id: charger_source_priority_select
+    name: "Charger Source Priority"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    force_new_range: true
+    entity_category: config
+    address: 5017
+    value_type: U_WORD
+    optionsmap:
+      "Solar first (CSO)": 0
+      "Solar and Utility (SNU)": 1
+      "Solar Only (OSO)": 2
+
+  - platform: modbus_controller
+    id: output_source_priority_select
+    name: "Output Source Priority"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5018
+    value_type: U_WORD
+    optionsmap:
+      "Utility -> Solar / Battery (USB)": 0
+      "Solar -> Solar / Utility -> Battery (SUB)": 1
+      "Solar -> Solar / Battery (SBU)": 2
+      "Solar -> Solar / Utility, Battery as backup (MKS)": 3
+
+  - platform: modbus_controller
+    id: ac_input_voltage_range_select
+    name: "AC Input Voltage Range"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5019
+    value_type: U_WORD
+    optionsmap:
+      "90 - 280 V (APL)": 0
+      "170 - 280 V (UPS)": 1
+
+  - platform: modbus_controller
+    id: max_charge_current
+    name: "Max Total Charge Current"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5022
+    value_type: U_WORD
+    optionsmap:
+      "10": 10
+      "20": 20
+      "30": 30
+      "40": 40
+      "50": 50
+      "60": 60
+      "70": 70
+      "80": 80
+      "90": 90
+      "100": 100
+      "110": 110
+      "120": 120
+      "130": 130
+      "140": 140
+      "150": 150
+      "160": 160
+
+  - platform: modbus_controller
+    id: max_utility_charge_current
+    name: "Maximum Utility Charge Current"
+    optimistic: true
+    skip_updates: ${select_skip_updates}
+    entity_category: config
+    address: 5024
+    value_type: U_WORD
+    optionsmap:
+      "2": 2
+      "10": 10
+      "20": 20
+      "30": 30
+      "40": 40
+      "50": 50
+      "60": 60
+      "70": 70
+      "80": 80
+      "90": 90
+      "100": 100
+      "110": 110
+      "120": 120
+      "130": 130
+      "140": 140
