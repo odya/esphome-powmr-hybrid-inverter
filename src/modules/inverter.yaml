@@ -55,7 +55,12 @@ sensor:
               id(pzem_grid_power).publish_state(0.0);
               id(pzem_grid_power_factor).publish_state(0.0);
             }
-            
+# If you are using this without a pzem module, then ESPHome might give you an issue for this lambda thing
+# In order to avoid this error I simply removed the above lambda code so it looked as follows:
+#         - lambda: !lambda |-
+#            // removed pzem stuff from here
+#
+# And the error was gone.
 
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
@@ -597,7 +602,18 @@ binary_sensor:
     bitmask: 0x1
 
 text_sensor:
-
+# Different versions of the inverter firmware appear have the following map for the modes:
+# 0 -> Solar first
+# 1 -> Solar and Utility
+# 2-> Only solar
+# If you have such firmware (manifests itself as reading the modes incorrectly) then edit the below switch statement to look as follows:
+#      switch (sensorIndex) {
+#        case 0: return std::string("Solar first");
+#        case 1: return std::string("Solar and Utility");
+#        case 2: return std::string("Only solar");
+#        default: return std::string(x);
+#      }
+# Also edit `charger_source_priority_select` below.
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     id: charger_source_priority_text
@@ -618,6 +634,20 @@ text_sensor:
         default: return std::string(x);
       }
 
+# Different versions of the inverter firmware also appear to have changed the orfer of the output priority modes:
+# 0 -> Utility first (USB)
+# 1 -> Solar first (SUB)
+# 2 -> SBU priority
+# 3 -> MKS priority
+# If you have such firmware (manifests itself as reading the modes incorrectly) then edit the below switch statement to look as follows:
+#       switch (sensorIndex) {
+#         case 0: return std::string("Utility first (USB)");
+#         case 1: return std::string("Solar first (SUB)");
+#         case 2: return std::string("SBU priority");
+#         case 3: return std::string("MKS priority");
+#         default: return std::string(x);
+#       }
+# Also edit `output_source_priority_select` below.
   - platform: modbus_controller
     modbus_controller_id: smg_inverter
     name: "Output Source Priority"
@@ -702,7 +732,13 @@ select:
     optionsmap:
       "Off": 0
       "On": 1
-
+# Edit this if you have a differnt firmware version with different mode mapping.
+# More info next to `charger_source_priority_text`.
+# Edit the options map to look like this:
+#  optionsmap:
+#    "Solar first": 0
+#    "Solar and Utility": 1
+#    "Only Solar": 2
   - platform: modbus_controller
     id: charger_source_priority_select
     name: "Charger Source Priority"
@@ -717,6 +753,15 @@ select:
       "Solar first": 1
       "Solar and Utility": 2
       "Only Solar": 3
+
+# Edit this if you have a differnt firmware version with different mode mapping.
+# More info next to "Output Source Priority".
+# Edit the options map to look like this:
+# optionsmap:
+#   "Utility first (USB)": 0
+#   "Solar first (SUB)": 1
+#   "SBU priority": 2
+#   "MKS priority": 3
 
   - platform: modbus_controller
     id: output_source_priority_select
