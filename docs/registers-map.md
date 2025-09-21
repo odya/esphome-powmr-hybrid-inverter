@@ -1,19 +1,19 @@
-# PowMr 2.4kW Inverter registers map
+# PowMr Inverter registers map
 
 ### Read registers
-- 4501 : Output Source Priority *(Returns index with offset. I'd prefer to use register 4537)* `settings`
+- 4501 : Mode `measurement`
 - 4502 : AC Voltage `measurement`
 - 4503 : AC Frequency `measurement`
-- 4504 : PV Voltage (?) `measurement`
-- 4505 : Charging *(right now)* `settings`
+- 4504 : PV Voltage `measurement`
+- 4505 : PV Power `measurement`
 - 4506 : Battery Voltage `measurement`
 - 4507 : Battery SoC `measurement`
 - 4508 : Battery Charge Current `measurement`
 - 4509 : Battery Discharge Current `measurement`
 - 4510 : Load Voltage `measurement`
 - 4511 : Load Frequency `measurement`
-- 4512 : Load Power `measurement`
-- 4513 : Load VA `measurement`
+- 4512 : Load VA `measurement`
+- 4513 : Load Power `measurement`
 - 4514 : Load Percent `measurement`
 - 4515 : Load Percent `measurement`
 - 4516 : Binary flags `binary_flags`
@@ -31,7 +31,7 @@
     * `0x4000` Return To Default Screen `settings`
     * `0x8000` Overload Bypass `settings`
 - 4536 : Charger Source Priority `settings`
-- 4537 : Output Source Priority *(More correct one)* `settings`
+- 4537 : Output Source Priority `settings`
 - 4538 : AC Input Voltage Range `settings`
 - 4540 : Target Output Frequency `settings`
 - 4541 : Max Total Charging Current `settings`
@@ -57,7 +57,9 @@
     * `0x100` AC Active
     * `0x8000` AC Active
 - 4555 : Charger Status *(0 - Off, 1 - Idle, 2 - Active)*
-- 4557 : Temperature sensor (**HVM3.6M confirmed**, **HVM2.4H not confirmed**)
+- 4557 : Temperature sensor (**HVM10.2M confirmed**, **HVM3.6M confirmed**, **HVM2.4H not confirmed**)
+- 4563 : PV2 Voltage (*HVM10.2M only*) `measurement`
+- 4564 : PV2 Power (*HVM10.2M only*) `measurement`
 
 ### Write registers
 *( [+] means tested )*
