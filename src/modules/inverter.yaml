@@ -295,7 +295,6 @@ sensor:
     modbus_controller_id: smg_inverter
     name: "Load Percent"
     address: 4514
-    register_count: 21
     register_type: holding
     value_type: U_WORD
     unit_of_measurement: "%"
@@ -313,6 +312,7 @@ sensor:
   # 4538 -> text
 
   - platform: modbus_controller
+    reuse_previous_range: true
     modbus_controller_id: smg_inverter
     name: "Target Output Frequency"
     accuracy_decimals: 0
