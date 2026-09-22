@@ -11,6 +11,7 @@ modbus:
   - id: modbus_inverter
     uart_id: uart_inverter
     send_wait_time: 250ms
+    turnaround_time: 1s
 
 modbus_controller:
   - id: smg_inverter
@@ -18,8 +19,14 @@ modbus_controller:
     modbus_id: modbus_inverter
     setup_priority: -10
     offline_skip_updates: 100
-    command_throttle: 1s
     update_interval: ${update_interval}
+    
+  - id: smg_inverter_slow
+    address: 0x05
+    modbus_id: modbus_inverter
+    setup_priority: -10
+    offline_skip_updates: 100
+    update_interval: ${slow_update_interval}
 
 sensor:
 
@@ -673,7 +680,7 @@ select:
   - platform: modbus_controller
     name: "Buzzer Alarm"
     optimistic: true
-    skip_updates: ${select_skip_updates}
+    modbus_controller_id: smg_inverter_slow
     entity_category: config
     address: 5002
     value_type: U_WORD
@@ -684,7 +691,7 @@ select:
   - platform: modbus_controller
     name: "Beep On Primary Source Fail"
     optimistic: true
-    skip_updates: ${select_skip_updates}
+    modbus_controller_id: smg_inverter_slow
     entity_category: config
     address: 5007
     value_type: U_WORD
@@ -695,7 +702,7 @@ select:
   - platform: modbus_controller
     name: "Overload Bypass"
     optimistic: true
-    skip_updates: ${select_skip_updates}
+    modbus_controller_id: smg_inverter_slow
     entity_category: config
     address: 5009
     value_type: U_WORD
@@ -707,8 +714,8 @@ select:
     id: charger_source_priority_select
     name: "Charger Source Priority"
     optimistic: true
-    skip_updates: ${select_skip_updates}
-    force_new_range: true
+    modbus_controller_id: smg_inverter_slow
+    reuse_previous_range: false
     entity_category: config
     address: 5017
     value_type: U_WORD
@@ -722,7 +729,7 @@ select:
     id: output_source_priority_select
     name: "Output Source Priority"
     optimistic: true
-    skip_updates: ${select_skip_updates}
+    modbus_controller_id: smg_inverter_slow
     entity_category: config
     address: 5018
     value_type: U_WORD
@@ -734,7 +741,7 @@ select:
   - platform: modbus_controller
     name: "Max Total Charge Current"
     optimistic: true
-    skip_updates: ${select_skip_updates}
+    modbus_controller_id: smg_inverter_slow
     entity_category: config
     address: 5022
     value_type: U_WORD
@@ -751,11 +758,12 @@ select:
   - platform: modbus_controller
     name: "Utility Charge Current"
     optimistic: true
-    skip_updates: ${select_skip_updates}
+    modbus_controller_id: smg_inverter_slow
     entity_category: config
     address: 5024
     value_type: U_WORD
     optionsmap:
+      "2": 2
       "10": 10
       "20": 20
       "30": 30
